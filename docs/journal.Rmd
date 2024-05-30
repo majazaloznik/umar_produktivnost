@@ -1,0 +1,45 @@
+---
+output:
+  pdf_document: default
+urlcolor: blue
+---
+
+30.5.2024
+
+OK, grem čez 1_Macro_PROD.R od Katarine. Plan je popeglat in predvsem na koncu namesto v access zapisati v postgres bazo, kjer moram še pripravit tabele. Ampak gremo najprej čez kodo. 
+
+Pazi, da je nov eurostat naložen, s starejšo verzijo ni delalo. 
+Dodam opise spremenjljivk iz Eurostata, drugače nič ne razumem, pa za dokumentacijo je treba to vedet. Aja, `label_eurostat() ` je fajn.
+
+GDP in EMP downloada za različne geo, pri GDP manjka eu28, ampak je 27 podvojen. Ravno tako pri GDP ni UK, pri EMP pa je. konsolidiram oboje. 
+
+Datum pri EMP je do 2022, pri GDP do 2023, konsolidiram oboje in prestavim time range na začetek. 
+
+V bistvu ima `get_eurostat()` že možnost filtrov, tako da nima smisla downloadat cele bulk tabele, če lahko že tam filtre nastavim, tako da gremo raje tako. 
+
+ok, gremo naprej, kode držav delam bolj pregledne, country_code_EA_noIE je po moji logiki euro brez irske? ampak irska je not, ni pa hrvaške? to je za preverit. Roti potrdila, vržem ven IE in dodam HR
+
+Naslednji korak je dodajanje aggregatov za neki skupin držav, kar se ponovi za vse 3 tabele, zato naredim raje funkcijo. 
+
+OK, clean up kode je končan, zdaj pa samo še imena stolpcev, potrjena s strani Rotije.
+
+CP_MPPS_EU27_2020_B1GQ	BDP, tekoče cene, v mio SKM (EU27 od 2020)
+CLV10_MEUR_B1GQ	BDP, stalne cene leta 2010, v mio EUR
+THS_PER_EMP_DC	Skupna zaposlenost, domači koncept, v 1000 oseb
+ THS_HW_EMP_DC	Delovne ure, domači koncept, v 1000
+THS_PER_POP_NC	Št. Prebivalcev, nacionalni koncept, v 1000
+GDP_PC_PPS 	BDP na prebivalca v SKM
+PROD_PPS 	Produktivnost v SKM, na zaposlenega
+PROD_PPS_HW	Produktivnost v SKM, na delovno uro
+PROD_real  	Realna produktivnost, na zaposlenega
+PROD_real_HW  	Realna produktivnost, na delovno uro
+EMP_RATE	Delež zaposlenih v celotnem prebivalstvu
+HW_EMP  	Delovne ure na zaposlenega
+GDP_PC_PPS_EU27_100	BDP pc v SKM (indeks EU27 2020 = 100)
+PROD_PPS_EU27_100 	Produktivnost v SKM (indeks EU27 2020 = 100), na zap.
+PROD_PPS_EU27_100_HW	Produktivnost v SKM (indeks EU27 2020 = 100), na delovno uro
+EMP_RATE_EU27_100 	Stopnja zaposlenosti (indeks EU27 2020 = 100)
+GDP_PC_PPS_EU27_100 	Delovne ure na zap. (indeks EU27 2020 = 100)
+
+Evo, za konec še na hitro na lokalni bazi testno naredim tabelo in zapišem, vse dela super. 
+
