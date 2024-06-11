@@ -1,0 +1,489 @@
+---
+title: "Tehnična dokumentacija za bazo `produktivnost` na PostgreSQL strežniku na `umar-bi`"
+author: "mz"
+date: "`r format(Sys.time(), '%d.%B %Y')`"
+output:
+        bookdown::pdf_document2:
+                highlight: haddock
+                toc_depth: 4
+urlcolor: blue
+header-includes:
+  - \renewcommand{\contentsname}{Vsebina}    
+  - \usepackage{booktabs}
+  - \usepackage[table]{xcolor}
+---
+
+# Pregled
+
+Dokument vsebuje tehnično dokumentacijo glede podatkovnih tokov za zajem, obdelavo in zapis podatkov o produktivnosti v bazo `produktivnost` na PostgreSQL strežniku na `umar-bi` 
+
+Gre za selitev podatkovnih tokov, ki so pred tem temeljili na Katarininih skriptah in se zapisovali v MS Access datoteke na M: (glej Arhiv spodaj)
+
+# R skripte
+
+## `01_eurostat_produktivnost.R`
+
+*originalna verzija* - `arhiv/1_Macro_PROD.R`
+
+*opis*:
+
+1. zajem podatkov iz evrostata iz tabel `nama_10_gdp` (BDP), `nama_10_a10_e` (zaposlenost),  `nama_10_pe` (prebivalstvo) in `demo_pjan` (prebivalstvo po starosti)
+2. izračun agregatov za osem skupin držav (glej \@ref(Tbl_pm) za detajle in združitev tabel
+3. izračun 20 novih spremenljivk (glej \@ref(Tbl_pm) za detajle
+4. zapis v tabelo `produktivnost_makro`
+
+
+# Baza `produktivnost`
+
+Na PostgreSQL strežniku na `umar-bi` (PostgreSQL 15) je več podatkovnih baz, za namene centralnega skladiščenja in dostopa do podatkov je bila postavljena nova baza z imenom `produktivnost`
+
+Za začetek so vse tabele znotraj `public` sheme (najvišja strukturna raven znotraj baze), po potrebi lahko dodamo več shem in razdelimo tabele v vsebinske sklope. 
+
+## Dostopanje do baze
+
+Dostop do baze je mogoč samo z uporabniškim imenom in geslom, ki ga lahko dodeli administrator Postgres strežnika (trenutno mz).  
+
+### Excel Data Connection / Power Query
+
+#### Pred prvo povezavo
+Pred prvo uporabo povezave je potrebno inštalirati ODBC driver za postgres (Open Database Connectivity), ki ga dobiš na [https://www.postgresql.org/ftp/odbc/releases/](https://www.postgresql.org/ftp/odbc/releases/). Izbereš zadnjo verzijo in znotraj mape izbereš 64 bitno verzijo `.msi` datoteke in jo preneseš. **Za namestitev rabiš admin pravice, zato rečeš Petru, da ti on uredi!**
+
+Naslednji korak: `Control panel` / `Admin Tools` / `ODBC Data Sources (64 bit)`, na prvem zavihku izbereš `Add` in iz seznama izbereš `PostgreSQL Unicode(x64)` in potem `Finish`. Potem izpoloniš setup polja:
+
+* `Data Source`: to je ime, po katerem boš povezavo spoznal, tako da recimo `produktivnost baza` ali kaj podobnega
+* `Database`: produktivnost
+* `Server`: 192.168.38.21
+* `Port`: 5432
+* `User Name`: svoje uporabniško ime (dobiš od Maje)
+* `Password`: svoje geslo  (dobiš od Maje)
+
+In še zadnji korak: odpri Excel, `Blank document`  in izberi `Data`, `Get Data`, `From other sources`, `From ODBC`  in iz seznama DNS izberi vir, ki si ga ravnokar poimenoval (torej "produktivnost baza" vz zgornjem primeru). Prvič, ko to narediš, te spet vpraša za uporabniško ime in geslo, kasneje pa tega ne bo več. 
+
+#### Vsaka nadaljna povezava
+
+Vsakič, ko hočeš dobiti podatke iz baze uporabiš sledeči postopek:
+
+* odpreš Excel, in izbereš `Data` / `Get Data` / `From other sources` / `From ODBC`
+* iz seznama `Data source names (DNS)` izbereš vir, kot si ga poimenoval in klikneš OK
+* odpre se `Navigator`, kjer izbereš na katero tabelo se hočeš povezati in potem klikneš `Transform Data`, da se odpre Power Query (če namesto tega klikneš na `Load`, se ti bo prenesla cela tabela, česar ponavadi nočeš).
+
+
+### R
+
+Za povezovanje iz `R`-ja potrebuješ knjižnjici `DBI` in `RPostgres`, za lažje delo s poizvedbami pa tudi `dbplyr`, ki se integrira z `dplyr`-jem:
+
+```
+# install.packages("DBI")
+# install.packages("RPostgres")
+# install.packages("dbplyr")
+```
+
+Povezavo vsakič vzpostaviš z naslednjo kodo, kjer vstaviš uporabniško ime in geslo (uporabi narekovaje okoli obeh):
+
+```
+con <- DBI::dbConnect(RPostgres::Postgres(),
+                      dbname = "produktivnost",
+                      host = "192.168.38.21",
+                      port = 5432,
+                      user = <uporabniško ime>,
+                      password = <geslo>)
+```
+
+Takole pa potem dostopaš do podatkov: npr. najprej poglej katere tabele so na voljo in potem naredi poizvedbo. Uporabljaš lahko običajne "pipe", samo na začetku moraš uporabiti `tbl()` da se povežeš in na koncu `collect()` da ti vrne tabelo:
+
+```
+# poglej najprej, če je kaka tabela tam
+DBI::dbListTables(con)
+
+# naredi poizvedno na tabeli: 
+tbl(con, "produktivnost_makro") |>
+  filter(geo == "EU27_2020") |>
+  collect()
+  
+```
+## Vzpostavitev baze
+
+
+
+## Tabele 
+
+### Tabela `produktivnost_makro` {#Tbl_pm}
+
+**geo**: 
+
+* 28 EU držav (vključno z UK) - uporabljene so dvomestne ISO oznake (`SI` za Slovenijo...)
+* štirje originalni agregati iz eurostata ^[Glej prilogo I., ampak na kratko: priporočljivo je, da se uporabljajo naši izračunani agregati in ne eurostatovi, kar je v praksi relevantno samo za EU27.]
+  + `EU28` (samo do leta 2019),
+  + `EU15` (samo do leta 2019), 
+  + `EA19`, 
+  + `EU27_2020`
+* osem dodatnih agregatov, izračunanih iz podatkov posameznih držav: 
+  + `EU13`, 
+  + `EU14`, 
+  + `EU27`,
+  + `EU27noIE` - EU brez Irske
+  + `EA20` - Evro ombočje
+  + `EAnoIE` - Evro območje brez Irske 
+  + vodilne `inovatorke` (trenutno BE, DK, SE, FI in NL) ter 
+  + `V4` - Višegrajske 4 (CZ, HU, SK, PL)
+
+#### Spremenljivke 
+
+v spodnji tabeli so razdeljene v tri skupine:
+
++ originalne spremenljivke, nesprememnjene iz eurostata (v zadnjem stolpcu je ime izvorne tabele)
++ preračunane spremenljivke (v zadnjem stolpcu je nakazan preračun glede na zaporedne številke spremenljivk)
++ preračunani indeksi za EU27 = 100 ^[Pri tem je uporabljen izračunan agregat in ne originalen Eurostatov]
+
+\begin{table}[ht]
+\scriptsize
+\centering
+\begin{tabular}{clll}
+\toprule
+\textbf{\#} & \textbf{Oznaka} & \textbf{Opis} & \textbf{Vir / Preračun} \\
+\midrule
+(1) & CP\_MPPS\_EU27\_2020\_B1GQ & BDP, tekoče cene, v mio SKM (EU27 od 2020) & nama\_10\_gdp \\
+(2) & CLV10\_MEUR\_B1GQ & BDP, stalne cene leta 2010, v mio EUR & nama\_10\_gdp \\
+(3) & THS\_PER\_EMP\_DC & Skupna zaposlenost, domači koncept, v 1000 oseb & nama\_10\_a10\_e \\
+(4) & THS\_HW\_EMP\_DC & Delovne ure, domači koncept, v 1000 & nama\_10\_a10\_e \\
+(5) & THS\_PER\_POP\_NC & Št. Prebivalcev, nacionalni koncept, v 1000 & nama\_10\_pe \\
+(6) & NR\_20\_64 & Št. običajnih prebivalcev starosti 20-64 let, v 1000 & demo\_pjan \\
+(7) & NR\_TOTAL & Št. običajnih prebivalcev, v 1000 & demo\_pjan \\
+\midrule
+(8) & GDP\_PC\_PPS & BDP na prebivalca v SKM & (1) / (5) \\
+\textcolor{gray!50}{(9)} & \textcolor{gray!50}{GDP\_PC\_PPS\_pjan} & \textcolor{gray!50}{BDP na običajnega prebivalca v SKM} & \textcolor{gray!50}{(1) / (7)} \\
+(10) & PROD\_PPS & Produktivnost v SKM, na zaposlenega & (1) / (3) \\
+(11) & PROD\_PPS\_HW & Produktivnost v SKM, na delovno uro & (1) / (4) \\
+(12) & PROD\_real & Realna produktivnost, na zaposlenega & (2) / (3) \\
+(13) & PROD\_real\_HW & Realna produktivnost, na delovno uro & (2) / (4) \\
+(14) & EMP\_RATE & Delež zaposlenih v celotnem prebivalstvu & (3) / (5) \\
+(15) & HW\_EMP & Delovne ure na zaposlenega & (4) / (3) \\
+(16) & EMP\_W\_AGE\_PROP & Delež zaposlenih v preb (20-64) & (3) / (6) \\
+  \textcolor{gray!50}{(17)} & \textcolor{gray!50}{W\_AGE\_PROP} & \textcolor{gray!50}{Delež preb 20-64 v skupnem prebivalstvu} & \textcolor{gray!50}{(6) / (5)} \\
+(18) & W\_AGE\_PROP\_pjan & Delež preb 20-64 v skupnem prebivalstvu & (6) / (7) \\
+\midrule
+(19) & GDP\_PC\_PPS\_EU27\_100 & \multicolumn{2}{l}{BDP pc v SKM (indeks EU27 = 100) } \\
+\textcolor{gray!50}{(20)} & \textcolor{gray!50}{GDP\_PC\_PPS\_pjan\_EU27\_100} & \multicolumn{2}{l}{\textcolor{gray!50}{BDP pc v SKM (indeks EU27 = 100)} } \\
+(21) & PROD\_PPS\_EU27\_100 & \multicolumn{2}{l}{Produktivnost v SKM (indeks EU27 = 100), na zaposlenega } \\
+(22) & PROD\_PPS\_EU27\_100\_HW & \multicolumn{2}{l}{Produktivnost v SKM (indeks EU27 = 100), na delovno uro } \\
+(23) & EMP\_RATE\_EU27\_100 & \multicolumn{2}{l}{Stopnja zaposlenosti (indeks EU27 = 100) } \\
+(24) & HW\_EMP\_EU27\_100 & \multicolumn{2}{l}{Delovne ure na zap. (indeks EU27 = 100) } \\
+(25) & EMP\_W\_AGE\_PROP\_EU27\_100 & \multicolumn{2}{l}{Delež zaposlenih v preb (20-64) (indeks EU27 = 100) } \\
+\textcolor{gray!50}{(26)} & \textcolor{gray!50}{W\_AGE\_PROP\_EU27\_100} & \multicolumn{2}{l}{\textcolor{gray!50}{Delež preb 20-64 v skupnem prebivalstvu (indeks EU27 = 100) }} \\
+(27) & W\_AGE\_PROP\_pjan\_EU27\_100 & \multicolumn{2}{l}{Delež preb 20-64 v skupnem prebivalstvu (indeks EU27 = 100) } \\
+\bottomrule
+\end{tabular}
+\caption{Spremenljivke v tabeli `produktivnost\_makro`}
+\label{tab:eurostat_summary}
+\end{table}
+
+
+Posebna pozornost je potrebna glede naslednjih parov spremenljivk 
+
+* BDP na prebivalca: spremenljivki 8 in 9 (oz. 19 in 20 za indekse): prva uporablja prebivalstvo po nacionalnem konceptu in je tako *pravilna*, druga uporablja vsoto "običajnih prebivalcev" je v tabeli dodana samo za primerjavo
+* Delež prebivalcev 20-64 v skupnem prebivalstvu: spremenljivki 17 in 18 (oz. 26 in 27): tukaj je *pravilna* druga spremenljivka, kjer sta v imenovalcu in števcu števili običajnih prebivalcev (iz tabele `pjan`), medtem ko je v prvi definicija prebivalstva v imenovalniku po nacionalnem konceptu, kar ni OK, ampak je dodana samo za primerjavo. 
+
+
+
+# Arhiv
+
+V mapi `arhiv` se nahajajo predvsem originalne Katarinine skripte na podalagi katerih so bile narejene nove skripte za na bazo `produktivnost`. Gre za 5 oštevilčenh skript, zaporedne številke so enake tudi pri novih skriptah (
+
+# Priloga - razlike med eurostat agregati in ročno izračunanimi - Tabela `produktivnost_makro`
+
+Eurostat ima v tabeli `produktivnost_makro` štiri agregate že izračunane: EU28, EU15,  EA19 in EU27_2020. Ti agregati se ne ujemajo popolnoma z agregati, ki jih lahko sami izračunamo iz podatkov posameznih držav - kar delamo za ostalih 7 agregatov. 
+
+Spodaj so prikazane razlike med Eurostat agregatom in ročno izračunanim agregatom za 5 glavnih spremenljivk v tej tabeli za EU19 (rdeče) in EU27_2020 (črno).
+
+Zakaj do teh razlik prihaja, ni čisto jasno, sploh ker se dinamika odstopanja razlikuje glede na spremenljivko. Razlike niso velike (največja je 0.03% pri delovnih urah), ampak vseeno se priporoča, da se uporablja naše izračunane agregate, namesto Eurostatovih - sploh če se prikazuje več agregatov hkrati, da so vsi konsistentno izračunani na isti način. 
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+suppressPackageStartupMessages(library(dplyr))
+```
+
+```{r, echo = FALSE, fig.cap = "delta za EA19 - BDP, tekoče cene, v mio SKM", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+
+master <- readRDS("../data/master01.rds")
+source("../R/00_geo_lookup.R")
+master_tidy <- master |>
+  inner_join(geo_lookup)
+par(mar=c(2,4,1,1) + 0.1)
+options(scipen = 999)
+umar <- master_tidy |>
+  group_by(na_item, time, unit,EA19) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EA19") |>
+  filter(unit == "CP_MPPS_EU27_2020", na_item == "B1GQ", EA19 == TRUE) |> 
+  pull(values)
+
+eurostat <- master |>
+ filter(geo == "EA19") |>
+  filter(unit == "CP_MPPS_EU27_2020", na_item == "B1GQ") |> 
+  pull(values)
+
+umar2 <- master_tidy |>
+  group_by(na_item, time, unit,EU27_2020) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EU27_2020") |>
+  filter(unit == "CP_MPPS_EU27_2020", na_item == "B1GQ", EU27_2020 == TRUE) |> 
+  pull(values)
+
+eurostat2 <- master |>
+ filter(geo == "EU27_2020") |>
+  filter(unit == "CP_MPPS_EU27_2020", na_item == "B1GQ") |> 
+  pull(values)
+
+plot(1995:2023, (eurostat - umar) / eurostat , type = "l", col = "red", xlab = "", ylab = "delta Eurostat vs. Umar, v %")
+legend("topleft", c("EA19", "EU27_2020"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(1995:2023, (eurostat2 - umar2) / eurostat2)
+lines(1995:2023, rep(0, 29))
+```
+
+
+```{r, echo = FALSE, fig.cap = "delta za EA19 - BDP, stalne cene leta 2010, v mio EUR", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+par(mar=c(2,4,1,1) + 0.1)
+
+umar <- master_tidy |>
+  group_by(na_item, time, unit,EA19) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EA19") |>
+  filter(unit == "CLV10_MEUR", na_item == "B1GQ", EA19 == TRUE) |> 
+  pull(values)
+
+eurostat <- master |>
+ filter(geo == "EA19") |>
+  filter(unit == "CLV10_MEUR", na_item == "B1GQ") |> 
+  pull(values)
+
+umar2 <- master_tidy |>
+  group_by(na_item, time, unit,EU27_2020) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EU27_2020") |>
+  filter(unit == "CLV10_MEUR", na_item == "B1GQ", EU27_2020 == TRUE) |> 
+  pull(values)
+
+eurostat2 <- master |>
+ filter(geo == "EU27_2020") |>
+  filter(unit == "CLV10_MEUR", na_item == "B1GQ") |> 
+  pull(values)
+
+plot(1995:2023, (eurostat - umar) / eurostat , type = "l", col = "red", xlab = "", ylab = "delta Eurostat vs. Umar, v %")
+legend("topleft", c("EA19", "EU27_2020"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(1995:2023, (eurostat2 - umar2) / eurostat2)
+lines(1995:2023, rep(0, 29))
+```
+
+```{r, echo = FALSE, fig.cap = "delta za EA19 - Skupna zaposlenost, domači koncept, v 1000 oseb", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+par(mar=c(2,4,1,1) + 0.1)
+options(scipen = 999)
+umar <- master_tidy |>
+  group_by(na_item, time, unit,EA19) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EA19") |>
+  filter(unit == "THS_PER", na_item == "EMP_DC", EA19 == TRUE) |> 
+  pull(values)
+
+eurostat <- master |>
+ filter(geo == "EA19") |>
+  filter(unit == "THS_PER", na_item == "EMP_DC") |> 
+  pull(values)
+
+umar2 <- master_tidy |>
+  group_by(na_item, time, unit,EU27_2020) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EU27_2020") |>
+  filter(unit == "THS_PER", na_item == "EMP_DC", EU27_2020 == TRUE) |> 
+  pull(values)
+
+eurostat2 <- master |>
+ filter(geo == "EU27_2020") |>
+  filter(unit == "THS_PER", na_item == "EMP_DC") |> 
+  pull(values)
+
+plot(1995:2023, (eurostat2 - umar2) / eurostat2 , type = "l", xlab = "", ylab = "delta Eurostat vs. Umar, v %")
+legend("topleft", c("EA19", "EU27_2020"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(1995:2023, (eurostat - umar) / eurostat,col = "red")
+lines(1995:2023, rep(0, 29))
+```
+
+```{r, echo = FALSE, fig.cap = "delta za EA19 - Delovne ure, domači koncept, v 1000", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+par(mar=c(2,4,1,1) + 0.1)
+
+umar <- master_tidy |>
+  group_by(na_item, time, unit,EA19) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EA19") |>
+  filter(unit == "THS_HW", na_item == "EMP_DC", EA19 == TRUE) |> 
+  pull(values)
+
+eurostat <- master |>
+ filter(geo == "EA19") |>
+  filter(unit == "THS_HW", na_item == "EMP_DC") |> 
+  pull(values)
+
+umar2 <- master_tidy |>
+  group_by(na_item, time, unit,EU27_2020) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EU27_2020") |>
+  filter(unit == "THS_HW", na_item == "EMP_DC", EU27_2020 == TRUE) |> 
+  pull(values)
+
+eurostat2 <- master |>
+ filter(geo == "EU27_2020") |>
+  filter(unit == "THS_HW", na_item == "EMP_DC") |> 
+  pull(values)
+
+plot(1995:2023, (eurostat2 - umar2) / eurostat2 , type = "l", xlab = "", ylab = "delta Eurostat vs. Umar, v %")
+legend("topleft", c("EA19", "EU27_2020"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(1995:2023, (eurostat - umar) / eurostat,col = "red")
+lines(1995:2023, rep(0, 29))
+```
+
+
+```{r, echo = FALSE, fig.cap = "delta za EA19 - Št. Prebivalcev, nacionalni koncept, v 1000", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+par(mar=c(2,4,1,1) + 0.1)
+options(scipen = 999)
+umar <- master_tidy |>
+  group_by(na_item, time, unit,EA19) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EA19") |>
+  filter(unit == "THS_PER", na_item == "POP_NC", EA19 == TRUE) |> 
+  pull(values)
+
+eurostat <- master |>
+ filter(geo == "EA19") |>
+  filter(unit == "THS_PER", na_item == "POP_NC") |> 
+  pull(values)
+
+
+umar2 <- master_tidy |>
+  group_by(na_item, time, unit,EU27_2020) |>
+  summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(geo = "EU27_2020") |>
+  filter(unit == "THS_PER", na_item == "POP_NC", EU27_2020 == TRUE) |> 
+  pull(values)
+
+eurostat2 <- master |>
+ filter(geo == "EU27_2020") |>
+  filter(unit == "THS_PER", na_item == "POP_NC") |> 
+  pull(values)
+
+plot(1995:2023, (eurostat2 - umar2) / eurostat2 , type = "l", xlab = "", ylab = "delta Eurostat vs. Umar, v %")
+legend("topleft", c("EA19", "EU27_2020"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(1995:2023, (eurostat - umar) / eurostat,col = "red")
+lines(1995:2023, rep(0, 29))
+
+```
+
+
+# Priloga II - razlike med uporabo prebivalstva iz tabele `nama_10_pe` in prebivalstva iz `demo_pjan` tabele - Tabela `produktivnost_makro`
+
+Za izračun spremenljivke `BDP na prebivalca v SKM` se uporablja prebivalstvo po nacionalnem principu iz tabele `nama_10_pe`, kjer pa ni podatkov po starostnih skupinah. Za dekompozicijo spremenljivke po naslednji formuli:
+
+$\displaystyle \frac{ BDP}{ preb} = \frac{ BDP}{ zap.} \times  \frac{ zap.}{ preb._{20-64}} \times \frac{ preb._{20-64}}{preb.}$
+
+oz. opisno: BDP per capita `GDP_PC_PPS` je produkt:
+
++ produktivnosti -- `PROD_PPS`
++ deleža zaposlenih v prebivalstvu starosti 20-64 -- `EMP_W_AGE`
++ deleža prebivalstva starosti 20-64 v celotnem prebivalstvu -- `W_AGE_PROP`
+
+moramo uporabiti podatke o prebivalstvu iz Eurostatove tabele `demo_pjan`, ker so samo tam podatki po starostnih skupinah, ki so potrebni za drugi dve komponenti. Definicija prebivalstva v tej tabeli je "*Usually resident population which represents the number of inhabitants of a given area on 1 January of the year in question (or on 31 December of the previous year).*"  
+
+medtem ko je definicija v tabeli `nama_10_pe`: "*all persons, nationals or foreigners, who are permanently settled in the economic territory of the country, even if they are temporarily absent from it, on a given date. A person staying or intending to stay at least one year is considered to be settled on the territory. By convention, the total population excludes foreign students and members of foreign armed forces stationed in a country.*" Ker gre za pomožne indikatorje nacionalnim izračunom, so podatki na letni ravni oz. gre za vrednosti na sredini leta za razliko od demografskih podatkov v tabeli `demo_pjan`, ki veljajo na prvi dan leta. 
+
+Za uporabo podatkov o številu prebivalstva v starostni skupini 20-64 torej moramo uporabiti podatke iz `demo_pjan`, kjer vzamemo povprečje dveh zaporednih let, da dobimo vrednost na sredini leta. V praksi to žal pomeni, da podatek za zadnje leto še ni dostopen, dokler ni objavljen podatek za tekoče leto. 
+
+Problem pa se pojavi pri vprašanju katere podatke uporabiti za skupno število prebivalcev. Za BDP per capita (`GDP_PC_PPS`) se zdi smiselno uporabiti podatke, ki so skupaj objavljeni, torej prebivalstvo po nacionalnem konceptu sredi leta. Ampak za dekompozicijo, natančneje zadnjo komponento deleža prebivalstva starosti 20-64 v celotnem prebivalstvu (`W_AGE_PROP`), je seveda smiselno uporabiti prebivalstvo iz tabele `demo_pjan`, da sta v imenovalcu in števcu enaki definiciji prebivalstva. 
+
+Spodaj je za Slovenijo, EU27, Nemčijo in Italijo prikazano kakšne so razlike med obema možnostima: na levi razlika med skupnim številom prebivalstva (rdeče linije so iz `demo_pjan`), na serdini razlika med zadnjo komponento, torej delež working age v skupnem prebivalstvu in na desni BDP per capita.
+
+
+```{r, echo = FALSE, fig.cap = "Slovenija", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+
+data_macro <- readRDS("../data/data_macro01.rds")
+par(mfrow = c(1, 3))
+par(mar=c(2,4,1,1) + 0.1)
+
+data_macro |>
+  filter(geo =="SI") ->x
+
+plot(x$time,x$THS_PER_POP_NC, type = "l", ylab = "Skupaj prebivalcev (1000)")
+lines(x$time,x$NR_TOTAL, col = "red")
+legend("topleft", c("demo_pjan", "nama_10_pe"), col = c("red", "black"), lty = 1, cex = 0.8)
+
+plot(x$time,x$W_AGE_PROP *100, type = "l", ylab = "procent 20-64 / skupaj preb.")
+lines(x$time,x$W_AGE_PROP_pjan * 100, col = "red")
+
+plot(x$time,x$GDP_PC_PPS, type = "l")
+lines(x$time,x$GDP_PC_PPS_pjan, col = "red", ylab = "BDP per capita")
+
+```
+
+```{r, echo = FALSE, fig.cap = "EU27", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+
+data_macro <- readRDS("../data/data_macro01.rds")
+par(mfrow = c(1, 3))
+par(mar=c(2,4,1,1) + 0.1)
+
+data_macro |>
+  filter(geo =="EU27") ->x
+
+plot(x$time,x$THS_PER_POP_NC, type = "l", ylab = "Skupaj prebivalcev (1000)")
+legend("topleft", c("demo_pjan", "nama_10_pe"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(x$time,x$NR_TOTAL, col = "red")
+
+plot(x$time,x$W_AGE_PROP *100, type = "l", ylab = "procent 20-64 / skupaj preb.")
+lines(x$time,x$W_AGE_PROP_pjan * 100, col = "red")
+
+plot(x$time,x$GDP_PC_PPS, type = "l")
+lines(x$time,x$GDP_PC_PPS_pjan, col = "red", ylab = "BDP per capita")
+
+```
+Pri Nemčiji so razlike pred letom 2011 precej dramatične, kar je povezano s tem, da je Nemčija leta 2011 izvedla prvi popis na podlagi centralnih registrov, do takrat pa so ocene temeljine na podatkih popisa iz leta 1987. Ta popis 2011 je pokazal, da je prebivalcev v resnici cca 1.5 milijona manj, kot so pred tem ocenjevali. "Due to the long inter-censal period, the Federal Statistical Office of Germany decided not to produce backward-adjusted population estimates by single-year ages and sex for the whole period." ^[https://www.bib.bund.de/Publikation/2018/Adjusting-inter-censal-population-estimates-for-Germany-1987-2011.html?nn=1219476] Skratka očitno so popravke za nazaj naredili samo na skupnih podatkih (in so torej v `nama_10_pe` tabeli), ne pa na podatkih po starostih, zato je vsota v `demo_pjan` še vedno narobe, ker je niso nikoli popravili.
+
+
+```{r, echo = FALSE, fig.cap = "Nemčija", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+
+data_macro <- readRDS("../data/data_macro01.rds")
+par(mfrow = c(1, 3))
+par(mar=c(2,4,1,1) + 0.1)
+
+data_macro |>
+  filter(geo =="DE") ->x
+
+plot(x$time,x$THS_PER_POP_NC, type = "l", ylab = "Skupaj prebivalcev (1000)")
+legend("topleft", c("demo_pjan", "nama_10_pe"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(x$time,x$NR_TOTAL, col = "red")
+
+plot(x$time,x$W_AGE_PROP *100, type = "l", ylab = "procent 20-64 / skupaj preb.")
+lines(x$time,x$W_AGE_PROP_pjan * 100, col = "red")
+
+plot(x$time,x$GDP_PC_PPS, type = "l")
+lines(x$time,x$GDP_PC_PPS_pjan, col = "red", ylab = "BDP per capita")
+
+```
+Za Italijo (spodaj) nisem našla kake elegantne razlage, sem pa vprašala Ale in čakam odgovor. 
+
+```{r, echo = FALSE, fig.cap = "Italija", fig.dim = c(8, 3), warning = FALSE, message = FALSE}
+
+data_macro <- readRDS("../data/data_macro01.rds")
+par(mfrow = c(1, 3))
+par(mar=c(2,4,1,1) + 0.1)
+
+data_macro |>
+  filter(geo =="IT") ->x
+
+plot(x$time,x$NR_TOTAL, type = "l", ylab = "Skupaj prebivalcev (1000)", col = "red")
+legend("topleft", c("demo_pjan", "nama_10_pe"), col = c("red", "black"), lty = 1, cex = 0.8)
+lines(x$time,x$THS_PER_POP_NC)
+
+plot(x$time,x$W_AGE_PROP *100, type = "l", ylab = "procent 20-64 / skupaj preb.")
+lines(x$time,x$W_AGE_PROP_pjan * 100, col = "red")
+
+plot(x$time,x$GDP_PC_PPS, type = "l")
+lines(x$time,x$GDP_PC_PPS_pjan, col = "red", ylab = "BDP per capita")
+
+```
+

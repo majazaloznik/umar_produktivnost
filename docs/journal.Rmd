@@ -43,3 +43,33 @@ GDP_PC_PPS_EU27_100 	Delovne ure na zap. (indeks EU27 2020 = 100)
 
 Evo, za konec še na hitro na lokalni bazi testno naredim tabelo in zapišem, vse dela super. 
 
+# 3.6.2024
+
+Started on the documentation in `umar_produktivnost-tehnična_dokumentaciona.Rmd`. 
+
+Actually let's add the tidy version of the table as well, which means removing the original aggregates, but adding columns for each aggregation. Or maybe adding a table with the aggregations, to keep things normalised. 
+
+OK, created `00_geo_lookup.R` where the lookup table is created. Also added EA20, cuz it didn't exist in the original set. The question is whether the tidy table should include teh country grouping columns, which would be familiar to people or not. I wonder if anyone will even use this ever, so maybe not, cuz that's clean af. 
+
+Lemme check the aggregations tho. I mena compare the eurostat ones with mine. 
+
+# 4.6.2024
+
+OK, got the OBDC connection to the database to work on the new computer and added the instructions to the technical documentation. 
+
+# 6.6.2024
+
+OK, dodajam  še demo_pjan, za dekompozicijo bdp na preb z delovno aktivnim preb. tu je problem, ker se total ne sešteje enako kot prebivalstvo po nacionalnem konceptu. bomo probal oboje, da vidimo kolk je sploh ta razlika. 
+
+OK, gremo gledat najprej te razlike med eurostat agregati in izračunanimi. EU28 in EU15 sta v bistvu passe, ker se končata 2020, tako da vprašanje, če se še uporabljajo. Isto EA19 verjetno, ki ga še računajo, ampak EU27 pa je verjento najbolj aktualen, ampak se razlikuje od izračunanega. Roti in Urška č pravita, da je samo EU20 relevanten. 
+
+
+# 10.6. 
+
+OK, zdej soem dodala še dekompozicijo po working age population, ker so podatki iz druge tabele je v dokumentaciji tudi analiza razlik. 
+
+Trenutno zapisujem na lokalno bazo, ampak to se hitro prestavi, ko dobijo drugi driverje, da sploh laho dostopajo. 
+
+Tabela produktivnost_makro je postavljena, tako da gremo na naslednjo skripto i guess?
+
+
