@@ -12,6 +12,7 @@ header-includes:
   - \usepackage[table]{xcolor}
   - \usepackage{float}
   - \usepackage{longtable}
+
 ---
 
 # Pregled
@@ -54,7 +55,7 @@ Pomožna skripta, ki pripravi 11 vektorjev za 11 agregacij držav, in tabelo `ge
 + dodane so spremenljivke za dekompozicijo produktivnosti glede na working age population
 + za izračun indeksov je uporabljen izračunan EU27 in ne eurostatov EU27_2020 (glej Prilogo \@ref(App:1))
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsake XXX?
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
 
 ## `02_produktivnost_strukturna.R`
 
@@ -83,7 +84,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `VA_share_real`, `PROD_yoy_EMP`, `PROD_yoy_HW`, `STRUCT_shift_HW`, `STRUCT_shift_EMP`
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsake XXX?
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
 
 ## `03_RULC_letno.R`
 
@@ -127,7 +128,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 + zaradi konsistentnosti z ostalimi tabelami so ohranjena "originalna"/angleška imena indikatorjev in dodan nov stolpec z njihovimi opisnimi imeni
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `COMP_nom_HW`, `COMP_real_HW`, `PROD_nom_HW`
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsake XXX?
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
 
 
 ## `04_RULC_četrtletno.R`
@@ -172,7 +173,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 + zaradi konsistentnosti z ostalimi tabelami so ohranjena "originalna"/angleška imena indikatorjev in dodan nov stolpec z njihovimi opisnimi imeni
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `COMP_nom_HW`, `COMP_real_HW`, `PROD_nom_HW`
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsake XXX?
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
 
 
 
@@ -192,7 +193,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 2. izračun agregatov za (ne)menjalne in (ne)poslovne sektorje in za BDE in združitev tabel
 3. izračun 23 novih spremenljivk za shift share analizo (glej poglavje \@ref(Sec:sursssvs) za detajle)
 4  zapis v tabelo `SURS_shift_share_cetrtletni`
-5. Izračun 11 novih spremenljivk za RULC (glej poglavje \@ref(Sec:sursrulcskdqc) za detajle)
+5. Izračun 11 novih spremenljivk za RULC (glej poglavje \@ref(Sec:sursrulcskdq) za detajle)
 6. reorientacija v "long table"
 7. Izračun medletnih sprememb in indeksov za 2005, 2007, 2008 in 2019
 8. zapis v tabelo `SURS_RULC_VA_SKD_cetrtletni`
@@ -212,6 +213,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 + za comprehensiveness in konsistentnost z ostalimi tabelami je shif share tabeli dodan agregat za SKD skupino `BDE`, ter naslednje spremenljivke:  `VA_share_real`, `EMP_share_diff`, `HW_share_diff`, `PROD_diff_EMP`, `PROD_diff_HW`, `STRUCT_shift_EMP`, `STRUCT_shift_HW`
 + za comprehensiveness in konsistentnost z ostalimi tabelami so RULC tabelam dodane naslednje spremenljivke: `COMP_real_EMP`, `COMP_real_HW`, `deflator_GDP` oz. `deflator_VA`
 
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 10:30:30
 
 ## `06_SURS_RULC_strukt_letno.R`
 
@@ -250,6 +252,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 + originalna RULC SKD tabela je imela samo SKD-je na 1.ravni in agregirane, zdaj so dodane še 2. ravni in spremenjlivka `aggr`, za lažje ločevanje med njimi. 
 + za comprehensiveness in konsistentnost z ostalimi tabelami so RULC tabelam dodane naslednje spremenljivke: `COMP_real_EMP`, `COMP_real_HW`, `deflator_GDP` oz. `deflator_VA`
 
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 10:30:30
 
 
 
@@ -288,7 +291,7 @@ V4 & Višegrajske 4 (CZ, HU, SK, PL) \\
 \bottomrule
 \end{tabular}
 \caption{Spremenljivke v tabeli `geo\_lookup`}
-\label{tab:eurostat_summary}
+\label{tab:geo_lookup}
 \end{table}
 
 
@@ -420,7 +423,7 @@ kable(umar_codes, "latex", longtable = FALSE, caption = "SKD šifrant dodatne ag
 
 ```
 
-```{r long-table, echo=FALSE, results='asis', warning = FALSE, message = FALSE}
+```{r longtable, echo=FALSE, results='asis', warning = FALSE, message = FALSE}
 
 kable(nace_codes[1:91,], "latex", longtable = TRUE, caption = "SKD šifrant NACE A*64\\label{tbl:nace}", row.names = FALSE, booktabs = TRUE,  placement = "H")  |> 
   kable_styling(latex_options = c("repeat_header")) |> 
@@ -461,7 +464,7 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti v stolpcu geo}
-\label{tab:geo_summary}
+\label{tab:geo_summary2}
 \end{table}
 
 **agr**:
@@ -511,7 +514,6 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \bottomrule
 \end{tabular}
 \caption{Spremenljivke v tabeli \texttt{produktivnost\_shift\_share}}
-\label{tab:prvs}
 \end{table}
 
 
@@ -551,7 +553,6 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti v stolpcu geo}
-\label{tab:geosummary}
 \end{table}
 
 
@@ -594,7 +595,6 @@ V spodnji tabeli so prikazane vrednosti spremenljivk Indicator in Descriptor v t
 \bottomrule
 \end{tabular}
 \caption{Vrednosti spremenljivk Indicator in Descriptor v tabeli \texttt{RULC\_BDP\_total\_letni}}
-\label{tab:rulcat}
 \end{table}
 
 **Value** - ker gre za dolgo tabelo, so vse vrednosti v stolpcu `Value`, spremenljivka pa je identificirana v stolpcih `Indicator` oz. `Descriptor`
@@ -675,7 +675,6 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti v stolpcu geo}
-\label{tab:geosummary}
 \end{table}
 
 
@@ -714,7 +713,6 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \bottomrule
 \end{tabular}
 \caption{Vrednosti spremenljivk Indicator in Descriptor v tabeli \texttt{RULC\_VA\_NACE\_letni}}
-\label{tab:rulcat}
 \end{table}
 
 **Value** - ker gre za dolgo tabelo, so vse vrednosti v stolpcu `Value`, spremenljivka pa je identificirana v stolpcih `Indicator` oz. `Descriptor`
@@ -760,7 +758,6 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti v stolpcu geo}
-\label{tab:geosummary}
 \end{table}
 
 
@@ -803,7 +800,6 @@ V spodnji tabeli so prikazane vrednosti spremenljivk Indicator in Descriptor v t
 \bottomrule
 \end{tabular}
 \caption{Vrednosti spremenljivk Indicator in Descriptor v tabeli \texttt{RULC\_BDP\_total\_cetrtletni}}
-\label{tab:rulcat}
 \end{table}
 
 **Value** - ker gre za dolgo tabelo, so vse vrednosti v stolpcu `Value`, spremenljivka pa je identificirana v stolpcih `Indicator` oz. `Descriptor`
@@ -883,7 +879,6 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti v stolpcu geo}
-\label{tab:geosummary}
 \end{table}
 
 
@@ -922,7 +917,6 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \bottomrule
 \end{tabular}
 \caption{Vrednosti spremenljivk Indicator in Descriptor v tabeli \texttt{RULC\_VA\_NACE\_cetrtletni}}
-\label{tab:rulcat}
 \end{table}
 
 **Value** - ker gre za dolgo tabelo, so vse vrednosti v stolpcu `Value`, spremenljivka pa je identificirana v stolpcih `Indicator` oz. `Descriptor`
@@ -1015,7 +1009,6 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \bottomrule
 \end{tabular}
 \caption{Spremenljivke v tabeli \texttt{SURS\_shift\_share\_cetrtletni}}
-\label{tab:prvs}
 \end{table}
 
 
@@ -1211,7 +1204,6 @@ U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti spremenljivke DEJAVNOST v tabeli \texttt{SURS\_shift\_share\_letni}}
-\label{tab:skd3}
 \end{table}
 
 **aggr** vrednost `level_` za SKD alfa oznake na 1. ravni, `level_2` za oznake na 2. ravni in `aggr` za agregirane vrednosti (Skupaj)
@@ -1310,7 +1302,6 @@ U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti spremenljivke DEJAVNOST v tabeli \texttt{SURS\_RULC\_VA\_SKD\_letni}}
-\label{tab:skd3}
 \end{table}
 
 **aggr** vrednost `level_` za SKD alfa oznake na 1. ravni, `level_2` za oznake na 2. ravni in `aggr` za agregirane vrednosti (Skupaj)
@@ -1408,13 +1399,15 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \newpage
 # Baza `produktivnost` - tehnična dokumentacija
 
-Na PostgreSQL strežniku na `umar-bi` (PostgreSQL 15) je več podatkovnih baz, za namene centralnega skladiščenja in dostopa do podatkov je bila postavljena nova baza z imenom `produktivnost`
+Na PostgreSQL strežniku na `umar-bi` (PostgreSQL 15) je več podatkovnih baz, za namene centralnega skladiščenja in dostopa do podatkov za produktivnost je bila postavljena nova baza z imenom `produktivnost`.
 
-Vse tabele znotraj `produktivnost` sheme (najvišja strukturna raven znotraj baze), po potrebi lahko dodamo več shem in razdelimo tabele v vsebinske sklope. 
+Vse tabele se nahajajo znotraj sheme `produktivnost` (najvišja strukturna raven znotraj baze), po potrebi lahko dodamo več shem in razdelimo tabele v vsebinske sklope. 
 
 ## Dostopanje do baze
 
-Dostop do baze je mogoč samo z uporabniškim imenom in geslom, ki ga lahko dodeli administrator Postgres strežnika (trenutno mz).  
+**Dostop do baze je mogoč samo z uporabniškim imenom in geslom, ki ga lahko dodeli administrator Postgres strežnika (trenutno mz).**
+
+Poleg dodajanja novih uporabnikov z `USAGE` in `SELECT` pravicami na bazi, je za vsakega uporabnika potrebno tudi v `pg_hba.conf` dodati njihove IP-je (službenega in domačega), da jim steržnik dovoli povezavo. 
 
 ### Excel Data Connection / Power Query
 
@@ -1442,8 +1435,6 @@ Vsakič, ko hočeš dobiti podatke iz baze uporabiš sledeči postopek:
 
 
 ### R
-
-Pred prvim poskusom povezovanja ti mora admin (trenutno mz) dati username in password, ter za tvoj IP odpreti dostop na bazo  ^[V bistvu za dva IP-ja, ker od doma dostopaš z drugim.].
 
 #### Vzpostavitev povezave
 
