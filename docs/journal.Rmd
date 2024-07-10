@@ -72,4 +72,167 @@ Trenutno zapisujem na lokalno bazo, ampak to se hitro prestavi, ko dobijo drugi 
 
 Tabela produktivnost_makro je postavljena, tako da gremo na naslednjo skripto i guess?
 
+Aja, dodala še geo lookup tabelo in v produktivnost marko stolpec aggr, da veš katere so ne-agregirane.
+
+OK, 2. skripta. Združila dve tabeli share shift dekompozicije na zaposlenega in na delovno uro. In mal preimenovala spremenljivke, zato da so lahko skupaj, in da so konsistentne. In dodala še vsoto statične in dimanične strukturne spremembe. In tabela je v bazi tudi. 
+
+ok, dejmo prestavit zdej to na produkcijo in dat Roti in Urški username-e. 
+
+```
+SELECT current_database();
+SELECT current_database();
+CREATE USER rotija WITH PASSWORD 'xxx';
+CREATE USER urska_cede WITH PASSWORD 'xxx';
+
+-- Grant usage on the schema
+GRANT USAGE ON SCHEMA produktivnost TO rotija;
+GRANT USAGE ON SCHEMA produktivnost TO urska_cede;
+
+-- Grant select on all current tables in the schema
+GRANT SELECT ON ALL TABLES IN SCHEMA produktivnost TO rotija;
+GRANT SELECT ON ALL TABLES IN SCHEMA produktivnost TO urska_cede;
+
+-- Ensure future tables inherit these permissions
+ALTER DEFAULT PRIVILEGES IN SCHEMA produktivnost GRANT SELECT ON TABLES TO rotija;
+ALTER DEFAULT PRIVILEGES IN SCHEMA produktivnost GRANT SELECT ON TABLES TO urska_cede;
+```
+
+OK, zdej rabim še IP-je, Urška je 172, potem pa tud še domače, ampak ok, otom potom. 
+
+# 12.6.
+
+OK, gremo dokumentirat tale shift share. 
+
+Ah, nace aggregates so 3 nivoji, dajmo to ločit. OK, dodala stolpec, da se loči te agregatne nivoje med sabo. V bistvu kasjeje Katarina tudi doda ene skd grupacije, zakaj jih ne bi že zdej za te dekompozicije? In tud agregacije za geografije ima dodane samo za zadnjo tabelo, pa ni razloga, da jih ne bi tudi že zdaj. OK; namesto treh tabel bo samo ena. 
+
+Za skd agregacije naredim novo skripto `00_skd_lookup.R`. 
+
+OK, dokumentacija za shift share, pain in the but, ampak mislim, da je. Bom dala Urški, da pregleda. 
+
+Pa preselim mapo na O:avtomatizacija. 
+
+# 13.6.
+
+OK, gremo 3. skripto. popravljam v glavnem samo, da se drži iste sktrukture kot prejšnji dve. 
+
+Aja, v bistvu 3. je rulc letno, ne surs, tisto dejmo na koncu. 
+
+Tukaj sta dva dela, en s totali in en po skd. prvi je iz `nama_10_gdp`, drugi pa `nama_10_a10`.
+
+OK, 3 skd sem naredila, ampak na oko so podatki na 3, 4 decimalki drugačni kot nazadnje shranjeni v access - in to za 1995, kar se valda ne spreminja? jutri naprej. Aha, prav je, isto dobim s Katarinino skripto, tako da so spreminjal neki očitno. 
+
+# 17.6.
+
+Vprašanja za Rotijo/Urško
+-	Letne podatke sem dala z letnico (1995) in ne datumom (1.1.1995), je to OK?
+- RULC podatki imajo indekse izračunane za 2005, 2007 in 2008 bazna leta, a so te letnice še vse relevantne, ali ni dodali kakšne druge?
+- RULC četrtčetni totals so za seasonaly adjusted in NSA, NACE pa samo za NSA. 
+- RULC totals so z BDP-jem, rulc NACE pa z DV-jem?
+- Rulc letni totals imajo poleg sredstev za zaposlene tudi plače in prispevke in pri zaposlenosti tudi samozaposlene, medtem ko pri NACE tabeli ni plače in prispevkov, niti samozaposlenih. Jih dodam vseeno?
+
+
+
+ok, končala četrtletnega tudi, ena napakica pri Katarini pri rename-u na koncu. 
+
+OK, nenavadno, včasih dbexecute, ki ima create table in je time date, ne dela prav in time rata int. ne razumem zakaj. če isti sql poženem direkt iz dbeaverja, pa dela ok. 
+
+Našla napako v trojki, DV rename namesto BDP. Bom naredila kar dva stolpca z imeni indikatorjev, da so konsistentni z ostalimi tabelami. 
+
+OK, trojka narejena, dokumentirana. mal sem preimenovala tabele, upam, da sem povsod prav napisala. 
+
+OK, začela peglat rulc total četrtletni. mal preveč vrstic ma zgleda, naslednji teden naprej.. 
+
+# 24.6.2024
+
+ok, se pravi imena indikatorjev dodat v štirki pa to. OK, to je narejeno in dokumentacija dodana. 
+Gremo zdej še surs narest. 
+
+# 26.6.2024
+
+OK, v sursu, K. uporabi zoo funkcijo as.yearqtr, ki doda presledek ampak je tud nek class očitno, ne vem a je to potrebno in zakaj tega pol ni v ostalih četrtletnih skriptah.
+
+Ta skripta je tako konfuzna, jao. OK, mamo DV, zaposlenost in stroške. dv + zap je produktivnost. dv ima dve meritvi, zap pa štiri. se pravi produktivnost jih ima šest pol. 
+
+stroski imajo samo eno. potem obema, str in prod popraviš skd oznake na kratke. in pobrišeš dodatne stolpce. in ju daš skupaj - join. 1404 vrstic trenutno. to je zdej rulc .
+
+na tej točki narediš sektorjske agregate (menjalni, poslovni) ampak K to naredi samo na produktivnosti for some reason. in preračune tudi. se pravi v tabeli brez stroškov dela. čeprav je že naredila rulc tabelo. prod tabela je široka, v resnici je to shift share tabela, če prav vidim. ok, to bomo naredil z istimi imeni stolpcev kot so že v shift share.
+
+za rulc potem tud naredi agregate sektorske in hkrati še BCDE minus C = BDE. česar na ni pri shift share-u. bomo še tam dodali. 
+
+jesus 0300220S.px je ful glupa tabela, kao dodana vrednost po SKDjih, in potem je še ena serija za skupaj in na koncu še BDP, seveda skupaj. ampak wtf nej s tem počne človk. Pa zmedlo me je, ker ga Katarina ni eksplicitno ven vrga, in ji pade ven šele z merge-om z zaposlitvioj. 
+
+# 1.7.2024
+
+fuck, problem s temi sursovimi tabelami je, da niso tidy, ker imajo not BCDE in C, kar je cela jeba pol, ko hočem recimo menjalne grupirat. moram za surs nove grupe narest očitno.. 
+
+rotijo vprašala za imenovanje spremenljivk. damo emp in hw na konec in real in nom na sredino. spremenljivka pa je spredi. 
+
+ok, končala shift share in rulc četrtletno
+
+sem pa preimenovala vse spremenljivke in moram to zdaj popraviti še na 02, 03 in 04. 
+
+# 2.7.24
+
+OK, naredila skripto 2, dodala par spremenljivk, da je isto kot pri sursu, preimenovala in popravila sql in dokumentacijo. 
+
+gremo 3. ok, letne BDP in letne VA narejene. 4. tudi. in dokumentacija je vsa ok. samo še preverit je treba cifre na hitro.
+
+OK, 5. imamo četrtletni shift share in RULC narejen, manjka zapis na bazo in še dokumentacija
+
+5. bomo razdelil še na 6. za letne. ampak tam mi niso jasni prod_A_det in prod_A_SKD. ta drugi OK, so samo top level SKD-ji. ta prvi pa so 2. level, ampak hkrati so zraven še B; D; itd, in hkrati izločen 12 (tobačni). aha, poštekala, tale tabela na SiStatu: https://pxweb.stat.si/SiStatData/pxweb/sl/Data/-/0301915S.px ima namreč nenavadno klasifikacijo po SKD, kjer so ene stvari na 1. in potem razčlenjene na 2. nivoju, ene pa samo na 1. nivoju. Tako da je zbrisala ven recimo A in C, ker sta oba razčlenjena na 2. in pustila B, ker ni razčlenjen (to so te ta brezvezni sektorji 😉)
+
+Tako naredi potem »tidy« tabelo, se pravi se nič ne podvaja, oz. vsota vsega je vsota gospodarstva. Minus tobačni izdelki
+
+OK, se pravi četrtletne imamo zdej prod Q in rulc Q, potem sta še tot_rulc_q in tot_prod_q, ampak slednja je samo širša verzija rulca (ki ima še rulc komponente), zato je ne bom delala. 
+
+Potem pa je še rulc_a_q, za katerega pa ni kode, ampak tabela itak izgleda ista kot RULC_Q, tako da to tudi preskočimo... 
+
+Se pravi imamo zdej 
+SURS_shift_share_četrtletni (prej prod_q)
+SURS_RULC_VA_SKD_četrtletni (prej RULC_q)
+SURS_RULC_BDP_total_četrtletni (prej TOT_RULC_q)
+
+# 3.7.2024
+
+aha, pri eurostatu smo za četrtletje imel datume, dejmo tud pri sursu pol valda. OK, dodala. 
+Zdej dokumentacijo za 05. potem pa 06, letne. 
+OK, dokumentacija za 05 je ok.
+dodala še linke na tabele pri skriptah, tudi za 04, treba še za ostale. 
+in preveri preimenovanja tabel
+in preveri podatke. 
+
+# 4.7.2024
+
+OK, dodala linke na tabele pri ostalih skriptah. Dodala tudi vsem lokacije prejšnjih tabel. 
+Gremo še podatke preverit za nazaj.
+
+OK, pri produktivnosti makro so agregati narobe, po moje se podvajajo jebemti. 
+
+jesus, grem preverjat podatke, svoje in katarinine, in vidim, da se pri eurostatovih realnih dodanih vrednostih razlikujejo, ampak samo pri agregatih tipa menjalni ipd. in grem gledat v čem je fora, in je fora, da je Katarina seštevala A + B-E, jaz pa A+B+C+D+E. in se izkaže, da so B-E in G-I ipd agregati narobe izračunani na Eurostatu. AMpak samo pri realah, nominale so OK. 
+
+OK, to je zaradi chain linked volumes-ov. zato so leta 2010 cifre ok, dlje kot greš stran, bolj se razlikujejo, ker chain linked volumes niso aditivni.. in razlike so med državami, ker se razlikujejo po ekonomski strukturi, volatilnosti, relativnih spremembah cen med sektorji ipd. ker razlike so tud manj kot en procent, pa do 10 al pa 15 % za HU, CZ, PL recimo. zdej samo ne vem kaj je bolj prav, individualne komponente al že izračunani agregati za vsote.. 
+
+OK, preverila podatke za 02. 03.
+
+Rotija prosila še za dva agregata tržne storitve: G-N
+ostale dejavnosti: A, B, D, E, O-U.
+
+OK, dodala oba agregata na vse NACE in SKD tabele. In v dokumentacijo povsod - manjkali sta še dva NACE šifranta, zdej je ok mislim. Preverim še podatke na 04, pol pa gremo letne sursove naprej. 
+
+OK, preverila 04. 
+
+# 8.7.2024
+
+ok, letni prod so ok, preverjeni podatki tudi. 
+
+# 9.7.2024
+
+te letne sursove sem že trikrat okol obrnla. zdej sm vrnila nazaj ostale ravni SKD, ki so manjkale, in dodala stolpce za SKD kode in aggr stolpec. in dokumentacijo za shift share, done, za rulc skd, ok tud z rulc total. 
+
+zbrisala belgijo iz inovatork. 
+
+zdej je vse ok kao na prvo žogo. vse skripte so narejene, vse tabele štimajo, dokumentacija je ok. naslednji korak je task scheduler naštimat in potem to aditivnost it popravit za nazaj. trenutno so vse agregacije za države in skd-je za realne podatke napačne, ampak baje se to da prav narest, za letne lažje, za četrtletne težje, ampak bom nekak :)
+
+
+
 

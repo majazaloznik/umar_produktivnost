@@ -13,7 +13,9 @@ source("R/00_geo_lookup.R") # geografije
 
 last_year <- lubridate::year(Sys.Date()) - 1
 
-####  Download Podatkov ########################################################
+################################################################################
+#                         Download Podatkov                                    #
+################################################################################
 GDP <- get_eurostat("nama_10_gdp",
                     filters = list(
                       geo = geo_subset,
@@ -59,7 +61,9 @@ POP2 <- get_eurostat("demo_pjan",
   select(unit, na_item, geo, time, Midyear_Pop) |>
   rename(values = Midyear_Pop)
 
-####  Definiranje dodatnih EU agregatov ########################################
+################################################################################
+#                 Definiranje dodatnih geografskih agregatov                   #
+################################################################################
 # funkcija za agregiranje
 aggregate <- function(df, group, group_name) {
     df %>%
@@ -109,7 +113,6 @@ pop2_EAnoIE <- aggregate(POP2,country_code_EA_noIE, "EAnoIE")
 pop2_inovatorke <- aggregate(POP2,country_code_inovatorke, "inovatorke")
 pop2_V4 <- aggregate(POP2,country_code_V4, "V4")
 
-
 ####  Združitev tabel   ########################################################
 GDP_agr <- bind_rows(GDP, gdp_eu13, gdp_eu14, gdp_EU27, gdp_EU27noIE,
                  gdp_EA20, gdp_EAnoIE, gdp_inovatorke, gdp_V4)
@@ -122,7 +125,9 @@ POP2_agr <- bind_rows(POP2, pop2_eu13, pop2_eu14, pop2_EU27, pop2_EU27noIE,
 master_agr <- bind_rows(GDP_agr, EMP_agr, POP_agr, POP2_agr)
 
 # saveRDS(master, "data/master01.rds")
-####  Preračuni ################################################################
+################################################################################
+#                               PRERAČUNI                                      #
+################################################################################
 data_macro <- master_agr %>%
   reshape2::dcast(geo + time ~ unit + na_item, value.var ="values") |>
   rowwise() |>
@@ -151,8 +156,9 @@ data_macro <- master_agr %>%
          W_AGE_PROP_EU27_100 = W_AGE_PROP / W_AGE_PROP[geo=="EU27"] * 100,
          W_AGE_PROP_pjan_EU27_100 = W_AGE_PROP_pjan / W_AGE_PROP_pjan[geo=="EU27"] * 100) |>
   ungroup() |>
-mutate(time = lubridate::year(time)) |>
-  select(geo, time, CP_MPPS_EU27_2020_B1GQ,
+mutate(time = lubridate::year(time),
+       agr = ifelse(geo %in% geo_lookup$geo, FALSE, TRUE)) |>
+  select(geo, agr, time, CP_MPPS_EU27_2020_B1GQ,
          CLV10_MEUR_B1GQ, THS_PER_EMP_DC, THS_HW_EMP_DC, THS_PER_POP_NC,
          NR_20_64, NR_TOTAL, GDP_PC_PPS, GDP_PC_PPS_pjan, PROD_PPS,
          PROD_PPS_HW, PROD_real, PROD_real_HW, EMP_RATE, HW_EMP,
@@ -161,22 +167,20 @@ mutate(time = lubridate::year(time)) |>
          EMP_RATE_EU27_100, HW_EMP_EU27_100, EMP_W_AGE_PROP_EU27_100,
          W_AGE_PROP_EU27_100, W_AGE_PROP_pjan_EU27_100)
 
-
 # saveRDS(data_macro, "data/data_macro01.rds")
-
-
 #### zapis na postgres bazo ####################################################
 # Database connection details
 con <- DBI::dbConnect(RPostgres::Postgres(),
-                      dbname = "prod-test",
-                      host = "localhost",
+                      dbname = "produktivnost",
+                      host = "192.168.38.21",
                       port = 5432,
                       user = "postgres",
-                      password = Sys.getenv("PG_local_16_PG_PSW"))
+                      password = Sys.getenv("PG_PG_PSW"))
 DBI::dbExecute(con, "set search_path to produktivnost")
 
+DBI::dbExecute(con, "TRUNCATE TABLE \"produktivnost_makro\"")
 # Insert data into the PostgreSQL table
-dbWriteTable(con, "produktivnost_makro", data_macro, overwrite = TRUE, row.names = FALSE)
+DBI::dbWriteTable(con, "produktivnost_makro", data_macro, append = TRUE, row.names = FALSE)
 
 # Disconnect from the database
-dbDisconnect(con)
+DBI::dbDisconnect(con)
