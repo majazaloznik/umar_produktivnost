@@ -236,3 +236,5 @@ zdej je vse ok kao na prvo žogo. vse skripte so narejene, vse tabele štimajo, 
 
 
 
+# 10.7.24
+prestavljanje na server ni tolk simle.. problem je source-anje iz automation scripts, ker je drug projekt in drug environment, in pol kr ene stvari ne delajo. zato bom skripto za poganjanje vsega skupaj pustila v umar-produktivnost. samo zdej me pa jebe inštaliranje eurostata in update data.table, ki se kar noče. 

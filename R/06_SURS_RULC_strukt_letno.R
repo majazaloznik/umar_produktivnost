@@ -43,7 +43,7 @@ DV_A <- bulk_DV_A |>
                                           "..Davki na proizvode",
                                           "..Minus: subvencije po proizvodih")) |>
   mutate(across(where(is.factor), as.character)) |>
-  rename(DEJAVNOST = DEJAVNOSTI.TRANSAKCIJE) |>
+  dplyr::rename(DEJAVNOST = DEJAVNOSTI.TRANSAKCIJE) |>
   select(-TRANSAKCIJE) |>
   pivot_wider(names_from = MERITVE)
 
@@ -53,7 +53,7 @@ zap_A <- bulk_zap_A |>
                                      "..S.13 Država", "..S.11 Nefinančne družbe",
                                      "..S.12 Finančne družbe")) |>
   mutate(across(where(is.factor), as.character)) |>
-  rename(DEJAVNOST = DEJAVNOSTI.SEKTORJI) |>
+  dplyr::rename(DEJAVNOST = DEJAVNOSTI.SEKTORJI) |>
   pivot_wider(names_from = c(MERITVE, TRANSAKCIJE))
 
 stroski_A <- bulk_stroski_A |>
@@ -81,7 +81,7 @@ tot_stroski_A <- bulk_sredstva_A |>
 # Združitev baz za shift share in RULC
 PROD_A <-  DV_A|>
   inner_join(zap_A) |>
-  rename_with(~ c("VA_nom", "VA_real", "EMP_PER","EMP_HW", "SAL_PER", "SAL_HW" ),
+  dplyr::rename_with(~ c("VA_nom", "VA_real", "EMP_PER","EMP_HW", "SAL_PER", "SAL_HW" ),
               .cols = 3:8) |>
   mutate(aggr =ifelse(grepl("^[A-Z]{1} ", DEJAVNOST), "level_1", "level_2"),
          aggr =ifelse(DEJAVNOST == "Skupaj dejavnosti", "aggr", aggr),
@@ -98,7 +98,7 @@ PROD_A <-  DV_A|>
 tot_RULC_A <-tot_BDP_A |>
   left_join(tot_zap_A) |>
   left_join(tot_stroski_A) |>
-  rename_with(~ c("GDP_nom", "GDP_real", "EMP_PER","EMP_HW", "SAL_PER", "SAL_HW", "COMP_nom" ),
+  dplyr::rename_with(~ c("GDP_nom", "GDP_real", "EMP_PER","EMP_HW", "SAL_PER", "SAL_HW", "COMP_nom" ),
               .cols = 2:8)
 
 
@@ -165,7 +165,7 @@ SURS_shift_share_letni <- PROD_A_agr |>
 # Database connection details
 con <- DBI::dbConnect(RPostgres::Postgres(),
                       dbname = "produktivnost",
-                      host = "192.168.38.21",
+                      host = "localhost",
                       port = 5432,
                       user = "postgres",
                       password = Sys.getenv("PG_PG_PSW"))
@@ -249,7 +249,5 @@ DBI::dbExecute(con, "TRUNCATE TABLE \"SURS_RULC_BDP_total_letni\"")
 DBI::dbWriteTable(con, "SURS_RULC_BDP_total_letni", SURS_RULC_BDP_total_letni,
                   append = TRUE, row.names = FALSE)
 
-# Disconnect from the database
-DBI::dbDisconnect(con)
 
 

@@ -2,7 +2,7 @@
 #               Pomožne skripte, ki se kličejo iz drugih skript,               #
 #                  tega ni treba nikoli samega zalaufat                        #
 ################################################################################
-
+library(dplyr)
 ################################################################################
 #                Šifrant NACE za eurostatove  + malo naših - skripta 02        #
 ################################################################################
@@ -14,7 +14,7 @@ nace_codes <- eurostat::get_eurostat("nama_10_a64",
                              unit = "CLV10_MEUR"),
                            type = "both")|> # Current prices, million euro
   select(nace_r2) |>
-  rename(nace_descr = nace_r2) |>
+  dplyr::rename(nace_descr = nace_r2) |>
   mutate(nace_r2 =  names(nace_descr)) |>
   mutate(nace_level = ifelse(grepl("^[A-Z]{1}$", nace_r2), "level_1",
                              ifelse(grepl("^[A-Z]{1}[0-9]{2}$", nace_r2), "level_2", "aggr"))) |>
@@ -86,7 +86,7 @@ nace_codes10 <- eurostat::get_eurostat("nama_10_a10",
                                        unit = "CLV10_MEUR"),
                                      type = "both")|> # Current prices, million euro
   select(nace_r2) |>
-  rename(nace_descr = nace_r2) |>
+  dplyr::rename(nace_descr = nace_r2) |>
   mutate(nace_r2 =  names(nace_descr)) |>
   relocate(nace_r2, nace_descr) |>
   bind_rows(new_aggregations[c(1:4, 11, 12),c(1,3)])
