@@ -136,10 +136,7 @@ con <- DBI::dbConnect(RPostgres::Postgres(),
                       user = "postgres",
                       password = Sys.getenv("PG_PG_PSW"))
 DBI::dbExecute(con, "set search_path to produktivnost")
-
 DBI::dbExecute(con, "TRUNCATE TABLE \"produktivnost_makro\"")
 # Insert data into the PostgreSQL table
 DBI::dbWriteTable(con, "produktivnost_makro", data_macro, append = TRUE, row.names = FALSE)
 
-# Disconnect from the database
-DBI::dbDisconnect(con)

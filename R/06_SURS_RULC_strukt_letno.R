@@ -10,7 +10,7 @@ library(dplyr)
 library(lubridate)
 library(zoo)
 ####   setup    ################################################################
-source("R/00_skd_lookup.R") # skd klasifikaicje
+source("R/00_skd_lookup.R", encoding = "UTF-8")# skd klasifikaicje
 source("R/helper_functions.R")
 ################################################################################
 #                 Download Letnih Podatkov                                     #

@@ -423,6 +423,13 @@ Mogoče pa ne rabim popravit, samo dodam exception za nulo. OK, je šlo tako. 6.
 ok, 6.2 je tudi OK. Mislim, da je koda za letne vse OK zdej. Gremo še enkrat čez vse in sproti dokumentacijo popravimo. 
 1, 2 in 31 in 32 so vsi preverjeni in dokumentacija popravljena. Samo še 61 in 62 in gremo na produkcijo. 
 
+# 12.8.24
+
+ok, letne so narejene, probajmo committat in it na produkcijo. stare skripte grejo v arhiv. nove se preimenujejo. 
+
+OK, grem iz serverja pognat in zdej ene četrtletne ne delajo, wtf. sej to je že čist ok delalo od tukaj, a ni? ni mu všek dejavnosti lookup in vidim, da so čšž-ji problem. na lokalni mašini so ok. ;e dodam encoding na source, pol zgleda ok. ampak zdej je še drug problem pri eurostatu in sicer dobim external pointer invalid error za cached tabele. zato dodala povsod cache = FALSE pri get_eurostat. po moje je samo fora, da se ti temp folderji vmes zbrišejo in pol ne dela več cache. pač bomo malo bolj obremenjevali eurostatove serverje, z večkratnimi downloadi. mogoče pogledam zakaj jih sploh downloadam večkrat. verjetno so v različnih skriptah? 
+
+ah, sploh ni blo to, ampak da sem prekinla povezavo z bazo in potem zadnji del skripte ni delal, ker mora pogledat koliko je vrstic v bazi. popravljeno zdej mensezdi. 
 
 
 

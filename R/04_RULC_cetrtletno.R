@@ -282,7 +282,4 @@ DBI::dbExecute(con, "TRUNCATE TABLE \"RULC_VA_NACE_cetrtletni\"")
 # Insert data into the PostgreSQL table
 DBI::dbWriteTable(con, "RULC_VA_NACE_cetrtletni", data_nace, append = TRUE, row.names = FALSE)
 
-# Disconnect from the database
-DBI::dbDisconnect(con)
-
 

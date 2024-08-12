@@ -57,9 +57,5 @@ diff <- initial_counts  |>
 body <- email_produktivnost_update_body(diff)
 
 # email changes to list of recipients
-email_produktivnost_changes(body, recipient = email_list)
-
-###############################################################################
-## Wrap up
-###############################################################################
-DBI::dbDisconnect(con)
+# email_produktivnost_changes(body, recipient = email_list)
+cat("script completed")

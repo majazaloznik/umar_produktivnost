@@ -118,5 +118,3 @@ DBI::dbExecute(con, "TRUNCATE TABLE \"produktivnost_shift_share\"")
 # Insert data into the PostgreSQL table
 DBI::dbWriteTable(con, "produktivnost_shift_share", data_shift_share_prod, append = TRUE, row.names = FALSE)
 
-# Disconnect from the database
-DBI::dbDisconnect(con)

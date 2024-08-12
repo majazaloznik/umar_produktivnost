@@ -36,7 +36,8 @@ initial_counts <- get_produktivnost_table_row_counts(con)
 ###############################################################################
 ## poženi skripte za eurostat tabele
 ###############################################################################
-source("R\\05_SURS_RULC_strukt_četrtletno.R", encoding = 'UTF-8')
+getwd()
+source("R\\05_SURS_RULC_strukt_cetrtletno.R", encoding = 'UTF-8')
 source("R\\06_SURS_RULC_strukt_letno.R", encoding = 'UTF-8')
 
 ###############################################################################
@@ -61,3 +62,4 @@ email_produktivnost_changes(body, recipient = email_list)
 ## Wrap up
 ###############################################################################
 DBI::dbDisconnect(con)
+cat("script completed")
