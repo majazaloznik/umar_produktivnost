@@ -67,46 +67,6 @@ sectors_surs_det <- list(
                            "19", "21", "22", "25", "26",
                            "27", "28", "29", "30", "31", "32", "33"))
 
-MENJALNI_sektor_surs_det = c("A", "B", "C", "D", "E", "G", "H", "I" , "J" )
-NEMENJALNI_sektor_surs_det = c("F" , "K" ,  "L" , "M", "N", "O", "P", "Q", "R", "S", "T")
-POSLOVNI_sektor_surs_det = c( "B", "C", "D", "E" , "F" ,  "G", "H", "I", "J" , "K", "M", "N" )
-NEPOSLOVNI_sektor_surs_det = c("A" , "L" , "O", "P", "Q", "R", "S", "T")
-TRZNE_surs_det = c("G", "H", "I", "J", "K", "L", "M", "N")
-OSTALE_surs_det = c( "A", "B", "D", "E", "O", "P", "Q", "R", "S", "T")
-#
-# MENJALNI_sektor <- c("A" , "B-E",  "G-I", "J")
-# NEMENJALNI_sektor <- c("F" , "K" ,  "L" , "M_N", "O-Q", "R-U")
-# POSLOVNI_sektor <- c("B-E", "F" ,"G-I", "J", "K", "M_N")
-# NEPOSLOVNI_sektor <- c("A" , "L" , "O-Q", "R-U")
-# HIGH_TECH_MANUF <- c("C21" , "C26")
-# MED_HIGH_TECH_MANUF <- c("C20" , "C27", "C28", "C29_C30")
-# MED_LOW_TECH_MANUF <- c("C19", "C22_C23", "C24_C25")
-# LOW_TECH_MANUF <- c("C10-C12",  "C13-C15", "C16-C18", "C31-C32")
-# KNOWLEDGE_MKT_SERV <- c("J",  "M")
-# REST_MKT_SERV <- c("G-I", "K", "N")
-# TRZNE <- c("G-I", "J", "K", "L", "M_N")
-# OSTALE <- c( "A", "B", "D", "E", "O-Q", "R-U")
-#
-# MENJALNI_sektor_surs <- c("A", "BCDE", "GHI" , "J" )
-# NEMENJALNI_sektor_surs <- c("F" , "K" ,  "L" , "MN", "OPQ", "RST")
-# POSLOVNI_sektor_surs <- c( "BCDE" , "F" ,  "GHI", "J" , "K", "MN" )
-# NEPOSLOVNI_sektor_surs <- c("A" , "L" , "OPQ", "RST")
-# TRZNE_surs <- c("GHI", "J", "K", "L", "MN")
-# OSTALE_surs <- c( "A", "BDE", "OPQ", "RST")
-# sectors <- list(
-#   MENJALNI_sektor = MENJALNI_sektor,
-#   NEMENJALNI_sektor = NEMENJALNI_sektor,
-#   POSLOVNI_sektor = POSLOVNI_sektor,
-#   NEPOSLOVNI_sektor = NEPOSLOVNI_sektor,
-#   HIGH_TECH_MANUF = HIGH_TECH_MANUF,
-#   MED_HIGH_TECH_MANUF = MED_HIGH_TECH_MANUF,
-#   MED_LOW_TECH_MANUF = MED_LOW_TECH_MANUF,
-#   LOW_TECH_MANUF = LOW_TECH_MANUF,
-#   KNOWLEDGE_MKT_SERV = KNOWLEDGE_MKT_SERV,
-#   REST_MKT_SERV = REST_MKT_SERV,
-#   TRŽNE = TRZNE,
-#   OSTALE = OSTALE
-# )
 new_aggregations <- data.frame(
   nace_r2 = names(sectors_eurostat_a64),
   nace_level = "aggr",

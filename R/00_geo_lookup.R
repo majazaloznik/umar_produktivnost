@@ -65,7 +65,15 @@ country_code_inovatorke <- c("DK", "SE", "FI", "NL")
 
 country_code_V4 <- c("CZ", "HU", "SK", "PL")
 
-
+geo_aggregations <- list(
+  EU13 = country_code_EU13,
+  EU14 = country_code_EU14,
+  EU27noIE = country_code_EU27_noIE,
+  EA20 = country_code_EA20,
+  EAnoIE = country_code_EA_noIE,
+  inovatorke = country_code_inovatorke,
+  V4 = country_code_V4
+)
 # create lookup table
 geo_lookup <- data.frame(geo = geo_countries)
 
@@ -83,6 +91,31 @@ geo_lookup$EA_noIE <- geo_lookup$geo %in% country_code_EA_noIE
 geo_lookup$inovatorke <- geo_lookup$geo %in% country_code_inovatorke
 geo_lookup$V4 <- geo_lookup$geo %in% country_code_V4
 
+
+# xrates_2010 <- eurostat::get_eurostat("namq_10_a10",
+#                                      filters = list(
+#                                        geo = geo_subset,
+#                                        time = c("2010-Q1", "2010-Q2", "2010-Q3", "2010-Q4"),
+#                                        s_adj = "NSA",
+#                                        na_item = "B1G", # Value added, gross
+#                                        unit = c("CLV10_MEUR", "CLV10_MNAC"),
+#                                        nace_r2 = "TOTAL")) |>
+#   select(-s_adj, -na_item, -freq, -nace_r2) |>
+#   pivot_wider(names_from = unit, values_from = values) |>
+#   mutate(xrate = CLV10_MNAC / CLV10_MEUR) |>
+#   group_by(geo) |>
+#   summarise(xrate = mean(xrate))
+#
+# xrates_annual <- eurostat::get_eurostat("nama_10_gdp",
+#                                       filters = list(
+#                                         geo = geo_subset,
+#                                         sinceTimePeriod = 1995,
+#                                         na_item = "B1G", # Value added, gross
+#                                         unit = c("CP_MEUR", "CP_MNAC"))) |>
+#   select( -na_item, -freq) |>
+#   pivot_wider(names_from = unit, values_from = values) |>
+#   mutate(xrate = CP_MNAC / CP_MEUR) |>
+#   select(-CP_MEUR, -CP_MNAC)
 
 
 # #### zapis na postgres bazo ####################################################

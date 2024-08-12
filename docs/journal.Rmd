@@ -237,4 +237,201 @@ zdej je vse ok kao na prvo žogo. vse skripte so narejene, vse tabele štimajo, 
 
 
 # 10.7.24
-prestavljanje na server ni tolk simle.. problem je source-anje iz automation scripts, ker je drug projekt in drug environment, in pol kr ene stvari ne delajo. zato bom skripto za poganjanje vsega skupaj pustila v umar-produktivnost. samo zdej me pa jebe inštaliranje eurostata in update data.table, ki se kar noče. 
+prestavljanje na server ni tolk simle.. problem je source-anje iz automation scripts, ker je drug projekt in drug environment, in pol kr ene stvari ne delajo. zato bom skripto za poganjanje vsega skupaj pustila v umar-produktivnost. samo zdej me pa jebe inštaliranje eurostata in update data.table, ki se kar noče. OK, ugasnila vse procese in pol je šlo.
+
+evo, skripti ločeni za eurostat in surs sta narejeni, batch fajla tudi, in scheduling tudi. 
+
+baza je provizorično otvorjena. 
+
+naslednja stvar so aditivnosti. Tale [članek](https://www.abs.gov.au/ausstats/abs@.nsf/0/95ce2d6796bd15aeca256db800754639/%24FILE/ATT4T7WF/Demystifying%20Chain%20Volume%20Measures_1.pdf) je kar super, da mi je vsaj približno jasno za kaj gre...
+
+# 11.7.24
+
+ok, gremo probat ta additivity. dodam, redundantly, še CLV_PCH_PRE kar je chain linked volumes percentage change on pervious period.  in PYP_MEUR, kar je previous year prices. dejmo za začetek primerjat EU 15 z mojim agregiranjem. aja, pa CP_MEUR rabim, ki so current prices, ne pa une s PPS valda.. 
+
+OK, se pravi, imam:
+tekoče cene 
+stanlne cene preteklega leta
+oboje je aditivno. se pravi lahko delam agregate iz tega. 
+ko jih seštejem, lahko potem izračunam za agregat stopnjo rasti. in ko imam to, lahko na referenčno leto naredim chain naprej in nazaj in dobim stalne cene referenčnega leta za agregate. i think. 
+
+# 15.7.2024
+
+poslala Janezu write up aditivnost.Rmd, kjer mislim, da sem pravilno naredila letne agregacije iz eurostatovih podatkov. grem probat zdej še četrtletna, ki mislim, da temeljijo na annual overlap method, vsaj za eurostat, glede na metodologijo [tukaj](https://ec.europa.eu/eurostat/cache/metadata/en/namq_10_esms.htm). 
+
+drek, grem še enkrat gledat aditivnost držav, in je pri tekočih cenah in prejšnjega leta enostavno ni. sem probala tudi EA19 za 2015-2022, ko sigurno ni tečajnih konverzij, ampak še vedno se ne seštejejo pravilno. 
+
+unrelated: total vsote za dodano vrednost se razlikujejo glede na izvorno tabelo: a10 in a64. to velja predvsem za Irsko, Francijo in Švedsko, kjer so okoli 4% za Irsko, in okoli 0.5-1% za ta drugi dve. 
+
+# 16.7.24
+
+ok, napisala na eurostat pritožbo. mimgrede, [tuki](https://ec.europa.eu/eurostat/documents/24987/4253460/COMPILING-EU-ACCOUNTS.pdf) je njihov pdf z metodologijo. kjer začuda piše, da rabiš samo PYP za delat svoje CLV, ampak [tuki]( https://dsbb.imf.org/sdds/summary-methodology-base/country/EMU/category/NAG00) pa ima IMF zelo podoben tekst, ampak pravilno piše CP in PYP.
+
+ok v excelu sprobala letne za surs, dela OK. no, sej to je bilo jasno i guess.
+
+OK, gremo še četrtletne za surs probat. najprej aditivnost tekočih in predhodnega leta, vse ok, najs. 
+
+# 17.7.2024
+
+ok, ročno reverse enžiniranje četrtletnih chain linked volume-ov. kira jeba. chatgpt, claude, australski statistični biro, imf in ek. in na koncu sem nekaj spacala skupaj, ampak zgleda ok. dela samo tako, da najprej naredim chain link s prvim letom za referenco in potem rebase-am na 2010 al karkol. in še potem je treba nekaj namutit za 1. leto, ampak nekak sem. v excelu dela zdej. 
+
+[tale](https://www.imf.org/external/pubs/ft/qna/pdf/2017/chapterv8.pdf) poglavje je bil najbolj uporaben, tabela 8.6, da sem jo reverse inžinirala, ampak še potem sem mogla za prvo leto mal namutit, samo je prav zdej. 
+
+ok, in stvar dela ok na surs podatkih, in pol probam na "istih" podatkih iz eurostata, in wtf. se izkaže, da je CLV serija ista kot naša, ampak CP in PYP sta pa mal drugačna in to vedno bolj, bolj nazaj greš. tako da potem valda ne moraš prav izračunat CLV-ja. od 2010 naprej je ok, prej pa so vedno večji razkoraki. ne vem, grem še eno drugo državo probat. pa pizda, še dobr, da sem reverse inžinirala na sursovih podatkih, drugač bi se mi zmešal, če bi imela prav algoritm, ampak imajo oni napačne podatke... Aja, ne, to je zaradi tečajev. če uporabiš national currency, potem pa je prav. Kar pomeni, da moramo za eurostat agregacije to vedno uporabljati? Če ne niso primerljivi podatki z našimi? Al kadar agregiram eurostat agregacije, moram uporabljati MEUR series, ker piše, da so tiste suitable for aggregation and internal comparison. 
+
+# 20.7.24
+
+OK, razvozlavanje kako ta chain linked volume, ki ga znam v excelu narest, narest tudi v R-u sploh ni tako enostavno. Ker gre za rekurzivno serijo in dplyr ni narejen  za to v bistvu. Ampak sem po ful matranja na koncu le pogruntala. Tako da imam zdaj funkcijo `chain_linking_quarterly_2010`, ki to dela. Rabim še letno, ampak je v bistvu že narejena, samo v funkcijo jo moram spremenit.
+
+
+# 22.7.24
+
+OK, zdej pa problem: agregiranje delamo dvakrat: enkrat med SKD-ji in enkrat med državami. Ampak vsaj za Slovenijo smo zdaj vidli, da ne smeš uporabljati MEUR, ampak MNAC. Gremo najprej sprobat to v Excelu, da vidimo, če znam sploh.
+
+# 23.7.24
+
+OK, poskušam zdej pogrnutat kako delujejo MNAC in MEUR. za začetek sem vzela EU15, in imam za obe valuti CP, PYP in CLV. CLV meur se izračuna prav (z manjšimi napakami)za vse razen za Portugalsko, čeprav Francija in UK imata tudi malo večjo napako, ampak Portugalska gre do 1.5%... Na žalost imajo oni na svoji strani samo CLV za 2016 objavljen. OK, primerjam portugalske MEUR in njihove objavljene na njihovem sursu in so od 1999 naprej isti za current prices, prej pa so MNAC. Kar smo vidli isto velja za Slovenijo. Ampak to ne razloži zakaj so CLV na eurostatu napačni in ne sledijo izračunu iz CP in PYP.  AMpak ne morem nič kej pametnega preverit, ker itak oni nimajo 2010 objavljenega svojega. Zanimivo, če grem po SKD-jih gledat portugalsko, je B OK, A in C pa ne, niti D. E pa je spet OK. 
+
+OK, Portugalci so očitno narobe izračunali ene svoje stalne cene. Tudi na njihovi strani, če probam njihove 2016 izračunat, so tudi narobe. Sem jim pisala. Peak geek. 
+
+# 24.7.24
+
+OK, čakamo na Portugalce, ampak v vsakem primeru moram naštudirat kako prav agregirat za vse države. 
+
+OK, vzamemo M+N za vse države in aggregacije, v MEUR in MNAC za CP, PYP in CLV2010.
+
++ najprej check aditivnosti. CP MEUR je ok, razen za Švedsko 2022. isto CP MNAC. in oba PYPja 0.15 % približno. OK, to ignoriramo. Čeprav je čudno, ampak ne grem na Švedski Surs se zdej še tam igrat. 
+
++ ok, gremo zdej te tečaje gledat. Zdej če primerjamo oba CLV-ja, je kurz konstanten in sicer tist od leta 2010. Če pa gledamo CP ali PYP, pa se spreminjajo dokler je float, potem ko je pa pegged, je kurz stabilen. Aja, tudi, ko je pegged, ni stabilen, ker ERM je dovoljeval malo lufta. Zato So vse pegged valute malo spremenjlive (razen Danske it seems) Aja, Danska je v ERMII in je prostovoljno zmanjšala fluctuation band na 2.5% namesto 15Žal se teh podatkov ne da nikjer uradno dobit na enem kupu, se pravi za valute ki ne obstajajo več tipa tolar in belgijski frank. Je tud Matevž rekel, da je čudno. Ampak pač bom uporabila implicitni tečaj, ki ga dobim iz teh Eurostat objav v MEUR in MNAC, med serijami so ti tečaji isti do 4 decimalke, kar je more than enough. 
+
++ double check teh tečajev: isti je za CP kot za PYP (čeprav tist je seveda zamaknjen za eno leto). Isti so med serijami, recimo M, N in M_N - do četrte decimalke. tako da i guess bom to enkrat naredila in naredila nek šifrant, da je pol mir. 
+
++ OK, actually, i might have had it all wrong. LInki so isti ne glede na to a so izračunani iz MEUR ali MNAC. Hm, ampak mogoče je to samo pri letnih podatkih, a ne.. OK, letni zgledajo res OK. V eurostat_annual_mnac_meur.xlsx je M+N narejen ya vseh 28 plus aggregate in rayen portugalske zgleda vse prbl ok, se pravi linke lahko vzameš iz MEUR in se ne rabiš z MNAC sploh zajebavat. In dobiš iste rezultate kot so objavljeni za CLV (ki je vedno isti za MEUR in MNAC.
+
++ OK gremo zdej sprobat to še za četrtletne. Za Slovenijo smo že vidli, da pred 2027 ne štima iz MEUR. Za Dansko pa pred 1996 očitno. Gremo probat iz MNAC dobit prave cifre torej...
+
+# 25.7.24
+
+OK, gremo četrtletne za vse EU. Tukaj v bistvu ni A64, samo A10 je objavljen, se pravi lahko samo ta total primerjam, ampak je ok. 
+
+Najprej annual averages, problem je da nekatere države nimajo podatka. Čeprav večina jih ima. AMpak kaj narest tam, kjer jih ni. Za Slovenijo podatek sicer "je", ampak je povprečje isto kot za current price, tako da mogoče sploh ni ta prav podatek, ampak je imputiran nekako?
+
+Potem je vprašanje kaj narediš za zadnje četrtletje, ki ni celo leto? Zdaj sem vzela pač njegovo vrednost, bomo vidli kako se izzide. OK, zdadnje je OK, ampak prve 4 niso, samo ne vem kako jih pogruntat. 
+
+  
+# 29.7.24
+
+
+OK, problem so predvsem 1995 letnice, ker tudi, če so podatki za PYP, kot npr za dansko in slovenijo, se linki za prvo leto razlikujejo. Kar mi ni čisto jasno zakaj, ker ostali linki so praktično identični, vsaj na prve tri decimalke. 
+Anyway, iz MNAC izračunani CLV so vsi pravilni, 0.00% errorja v primerjavi z obljavljenimi.
+
+OK, države z Eurom, recimo Finska:
++ CP so isti od leta prevzema naprej (1999)
++ PYO si isti od enega leta kasneje (2000)
++ CLV so isti za celo obdobje ?
++ CLV izračunan iz MEUR je pravilen od leta prevzema naprej 1999
++ CLV iz MNAC izračunan je pravilen za celo obdobje. 
+
+Isto velja za Slovaško, Slovenijo. 
+Torej za te države moraš vzeti MNAC CP in PYP ( jih sešteješ) in iz njih izračunaš CLV. Če imaš samo MEUR, pa rabiš preračunati v MNAC in sicer tako:
++ CP ima četrtletne tečaje, PYP pa letnega, ki je povprečje četrtletnih od prejšnjega leta. iz teh izračunaš MNAC in potem linke, cl95, cl10, clv10. 
+
+Potem države s svojo valuto, recim oDanska:
++ cel čas MNAC v drugi valuti. Iz nje izračunaš CLV in potem ga prebaciš v MEUR. in uporabiš xrate od leta 2010..  Če ga izračunaš iz MEUR pa je tudi prav, razen za 1995. Samo ne razumem zakaj ne. 
+Ampak v bistvu moram itak MNAC uporabljat, tako da je to verjetno to. Če je v EUR, potem bo CLV itak prav, za ostale pa rabim samo xrate iz leta 2010, kar pa je stalno, tako da ni nobenega overheada i guess. 
+
+Grem probat še kako državo. Portugalska je OK razen za 1995 in malenkost 1996 (0.27%).
+
+
+Se praiv rabim xrate za 2010, ki ga dobim iz CVL meur clv mnac. Dejmo to potegnt dol najprej. 
+
+OK, imam xrates-e v 00_geo_lookup.R.
+
+Zdej imam še annual funkcijo za CLV-je. Dela super. Zdaj je vprašanje, ali sploh downloadat CLV-je iz eurostata, če jih lahko jaz izračunam. Ali naj jih izračunamo samo za agregate. No dejmo samo za agregate, da bo hitreje?
+
+# 30.7.24
+
+ugh. agregiranje pomeni, da je treba najprej seštet mnac-je, in za to jih moraš najprej konvertirat v meur. se pravi rabim xrates in za cp in za pyp. 
+
+
+OK, se pravi takole mora it proces: imamo dve dimenziji agregiranja, po SKD-jih in po geografijah. Kazalnike imamo navadne, npr. PPS ali zaposlenost, in pa nenavadne, kot je CLV. Navadne se enostavno sešteva, ampak CLV-jev pa ne seštevaš. Za njih moraš najprej sešteti MNAC vrednosti. In če agregiraš geografije, jih moraš najprej xrate-at preden jih lahko seštevaš. Potem, ko so sešteti, pa lahko izračunaš CLV. Za aggregate SKD je torej OK, da se enostavno seštejejo vsi kazalniki. za aggregate geo pa je treba xrate. potem, ko je vse agregiranje narejeno pa pride chain linking. 
+
+
+OK,
+
+01: samo geo agregiranje
+02: geo in skd aggregiranje
+03: najprej samo geo agregiranje
+    potem geo in skd 64 agregiranje
+04: najprej samo geo agregiranje
+    potem geo in skd 10 agregiranje
+
+Zdej je trega narest geo_aggregiranje funkcijo, ki bo delala v vseh teh pogojih. predvsem je issue, ker imajo lahko input tabele različno število stolpcev. treba pa jo je znotraj funkcije dat wider in potem spet nazaj longer. Za longer pa rabim vedet število stolpcev, a ne. ki je enako številu unique v unit? probam to. OK, aggregate_geo seems to work on 1, 2, 3 and 4, that means regardless of the number of columns, and regardless if MNAC is there or not. if it is, the values are converted to Euros first. 
+
+# 31.7.24
+
+OK, zdej mislim, da sem v R-u prav naredila za letne, ampak se ne izzide za recimo EU15 al pa EU27. Ampak nisem prav naredila a ne, ker smo rekli, da za letne ne rabim MNAC, a ni blo tko?
+
+
+OK, gremo letne še enkrat brez MNAC. Fun. OK, dela. na grafu se ful lepo ujema za 15 in 27 total. grem še procente pogledat. OK, za EU27 total je največja napaka 0.59% za 95, potem pada. Za EU15 je max 0.12% leta 1995 in tudi pada pol. This is acceptable afaic. 
+
+OK, 01 mislim, da je OK. Samo sem morala za emp in pop dodat EU27 agregiranje, ker ga na eurostatu ni, aja, ne, problem je, da ya hrvaško ni age disagregated podatkov na pjan, tako da vse izpeljane spremenljivke, ki to uporabljajo, so šele od leta 2010 naprej. AMpak tako pač je, ne gre drugače. Za dodat v dokumentacijo. 
+
+
+
+OK, zdej dodajam SKD-je v dvojki. in se nekaj zatakne pri malti za HTM, ker ni podatkov pred letom 2017. kako je do tega prišlo ne vem, ampak ja, če ni podatkov za 2010, pol koda seveda ne more delat.. Aha, HTM sta C21 in C26, in Malta nima podatkov do leta 2017 - do takrat so faking confidential. To pa pomeni, da ne morem izračunat CLV-jev, če nimam referenčnega leta. Tko da jebi se Malta, letiš ven. Upam, da je to edina taka fora... Mogoče če probam pogruntat kaj še manjka? Luxemburbu tudi cel kup sektorjev manjka. Drugače pa še par malenkosti, ampak nobena taka, da bi cel agregiran sektor manjkal - to je namreč issue pri MT (in LU), če ni niti enega pod sektorja, potem ni serije. Skratka to gre v dokumentacijo, kodo pa popravimo tako, da ne seštevamo stvari, ki nimajo podatkov za 2010 i guess. 
+
+
+# 1.8. 
+
+Zdej sem porabla en dan za to malto in Lux jebemti. Ampak zdej dela in če bo še komu manjkal za 2010, bo tudi delal ok. 
+
+OK, 01 in 02 zdej delata ok.
+
+gremo na 03, tuki je issue pri aggr in CLV, da so še D1 in D11 in D12 zraven, ki pa imajo samo CP vrednosti, ne pa tudi PYP oz. CLV, se pravi moram to nekako popucat...
+
+OK, trojka dela, naredila double check in primerjala z originalom in so edine razlike na agregiranih geograpfijah na sedmih kazalnikih, ki imajo reale not. In to za vsa leta razen za 2010, juhej!
+
+Hm, trojka VA check pa ima razlike tudi pri zaposlenosti, why the fuck. 
+
+# 2.8.24
+
+OK, double check po vrsti, v 01 so razlike tam, kjer jih ne bi smelo bit. step by step debugging. aha, EA20 je mel napa;no grupo, popravljeno. gremo 02 pogledat. 02 debugging tudi našel dve napaki, ampak zdej je OK. razlike so samo na realah in iz njih izračunanih zadevah, na nominalah in emp spremenljivkah so e-10 razlike, kar je floating point issue, efektivno je vse perfektno.
+OK, 03. Evo, dela perfektno, juhej!!! aja, to je prvi del. kaj pa drugi del? tudi OK, razlike max e-09, so all good :)
+
+# 5.8.24
+
+ok, naredimo še SURS zdej letne, 06. Aja, ne, dejmo najprej popeglat te agregacije, ker so preveč dolge. O, clean up 01 super, pod 150 znakov. gremo naprej. Dvojka tudi OK, pod 130 znakov. 
+OK, trojka. Prvi del je OK. ampak OK, zdej pri 03 pa imamo v drugem delu A10, kar pomeni, da sektorji niso več tako simple oz. natančneje, da je treba C odštet od B-E preden lahko naredimo Ostalo. Fun times. OK, zdej sem pri 3.2 morala nekaj popravljat funkcije, zato še enkrat preverjam 1 in 2. 
+
+dodala še energetske in predelovalne brez energetskih za Rotijo. to je zdej za eurostat a64 samo. 
+
+# 6.8.24
+
+OK, 03.1 je ok, 03.2 tudi, s tem, da so "ostale" seveda drugačne, dodan je BDE in manjka EU27, se pravi vse super. 
+
+Gremo še 06 za surs probat.
+
+OK, delno ok, ampak se sesuje pri agregacijah, kjer je 2023 nula, ker backward chain ne dela.. se pravi bo treba popravit v bistvu celo funkcijo po moje. ampak jutri, ok?
+
+# 7.8.2024
+
+Mogoče pa ne rabim popravit, samo dodam exception za nulo. OK, je šlo tako. 6.01 dela OK, preverjeno, dodala še vse ostale skd agregacije, ki jih imamo pri eurostatu. in v skd lookup popravila list za surs det, moram to še za a10 in a64 narest. in 6.2 narest in spet preverit vse letne skripte. pol pa res dost.. 
+
+# 9.8.2024
+
+ok, 6.2 je tudi OK. Mislim, da je koda za letne vse OK zdej. Gremo še enkrat čez vse in sproti dokumentacijo popravimo. 
+1, 2 in 31 in 32 so vsi preverjeni in dokumentacija popravljena. Samo še 61 in 62 in gremo na produkcijo. 
+
+
+
+
+
+
+
+
+
+
+
+
+
