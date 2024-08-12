@@ -78,7 +78,7 @@ gdp_eu13 <- aggregate(GDP,country_code_EU13, "EU13")
 gdp_eu14 <- aggregate(GDP,country_code_EU14, "EU14")
 gdp_EU27 <- aggregate(GDP,country_code_EU27, "EU27")
 gdp_EU27noIE <- aggregate(GDP,country_code_EU27_noIE, "EU27noIE")
-gdp_EA20 <- aggregate(GDP,country_code_EU27, "EA20")
+gdp_EA20 <- aggregate(GDP,country_code_EA20, "EA20")
 gdp_EAnoIE <- aggregate(GDP,country_code_EA_noIE, "EAnoIE")
 gdp_inovatorke <- aggregate(GDP,country_code_inovatorke, "inovatorke")
 gdp_V4 <- aggregate(GDP,country_code_V4, "V4")
@@ -88,7 +88,7 @@ emp_eu13 <- aggregate(EMP,country_code_EU13, "EU13")
 emp_eu14 <- aggregate(EMP,country_code_EU14, "EU14")
 emp_EU27 <- aggregate(EMP,country_code_EU27, "EU27")
 emp_EU27noIE <- aggregate(EMP,country_code_EU27_noIE, "EU27noIE")
-emp_EA20 <- aggregate(EMP,country_code_EA_noIE, "EA20")
+emp_EA20 <- aggregate(EMP,country_code_EA20, "EA20")
 emp_EAnoIE <- aggregate(EMP,country_code_EA_noIE, "EAnoIE")
 emp_inovatorke <- aggregate(EMP,country_code_inovatorke, "inovatorke")
 emp_V4 <- aggregate(EMP,country_code_V4, "V4")
@@ -98,7 +98,7 @@ pop_eu13 <- aggregate(POP,country_code_EU13, "EU13")
 pop_eu14 <- aggregate(POP,country_code_EU14, "EU14")
 pop_EU27 <- aggregate(POP,country_code_EU27, "EU27")
 pop_EU27noIE <- aggregate(POP,country_code_EU27_noIE, "EU27noIE")
-pop_EA20 <- aggregate(POP,country_code_EA_noIE, "EA20")
+pop_EA20 <- aggregate(POP,country_code_EA20, "EA20")
 pop_EAnoIE <- aggregate(POP,country_code_EA_noIE, "EAnoIE")
 pop_inovatorke <- aggregate(POP,country_code_inovatorke, "inovatorke")
 pop_V4 <- aggregate(POP,country_code_V4, "V4")
@@ -108,7 +108,7 @@ pop2_eu13 <- aggregate(POP2,country_code_EU13, "EU13")
 pop2_eu14 <- aggregate(POP2,country_code_EU14, "EU14")
 pop2_EU27 <- aggregate(POP2,country_code_EU27, "EU27")
 pop2_EU27noIE <- aggregate(POP2,country_code_EU27_noIE, "EU27noIE")
-pop2_EA20 <- aggregate(POP2,country_code_EA_noIE, "EA20")
+pop2_EA20 <- aggregate(POP2,country_code_EA20, "EA20")
 pop2_EAnoIE <- aggregate(POP2,country_code_EA_noIE, "EAnoIE")
 pop2_inovatorke <- aggregate(POP2,country_code_inovatorke, "inovatorke")
 pop2_V4 <- aggregate(POP2,country_code_V4, "V4")
@@ -146,15 +146,15 @@ data_macro <- master_agr %>%
          W_AGE_PROP_pjan = NR_20_64 /NR_TOTAL) |>  # delež 20-64 v prebivalstvu
   ungroup() |>
   group_by(time) |>
-  mutate(GDP_PC_PPS_EU27_100 = GDP_PC_PPS / GDP_PC_PPS[geo=="EU27"] * 100,
-         GDP_PC_PPS_pjan_EU27_100 = GDP_PC_PPS_pjan / GDP_PC_PPS_pjan[geo=="EU27"] * 100,
-         PROD_PPS_EU27_100  = PROD_PPS / PROD_PPS[geo=="EU27"] * 100,
-         PROD_PPS_HW_EU27_100 = PROD_PPS_HW / PROD_PPS_HW[geo=="EU27"] * 100,
-         EMP_RATE_EU27_100 = EMP_RATE / EMP_RATE[geo=="EU27"] * 100,
-         HW_EMP_EU27_100 = HW_EMP / HW_EMP[geo=="EU27"] * 100,
-         EMP_W_AGE_PROP_EU27_100 = EMP_W_AGE_PROP / EMP_W_AGE_PROP[geo=="EU27"] * 100,
-         W_AGE_PROP_EU27_100 = W_AGE_PROP / W_AGE_PROP[geo=="EU27"] * 100,
-         W_AGE_PROP_pjan_EU27_100 = W_AGE_PROP_pjan / W_AGE_PROP_pjan[geo=="EU27"] * 100) |>
+  mutate(GDP_PC_PPS_EU27_100 = GDP_PC_PPS / GDP_PC_PPS[geo=="EU27_2020"] * 100,
+         GDP_PC_PPS_pjan_EU27_100 = GDP_PC_PPS_pjan / GDP_PC_PPS_pjan[geo=="EU27_2020"] * 100,
+         PROD_PPS_EU27_100  = PROD_PPS / PROD_PPS[geo=="EU27_2020"] * 100,
+         PROD_PPS_HW_EU27_100 = PROD_PPS_HW / PROD_PPS_HW[geo=="EU27_2020"] * 100,
+         EMP_RATE_EU27_100 = EMP_RATE / EMP_RATE[geo=="EU27_2020"] * 100,
+         HW_EMP_EU27_100 = HW_EMP / HW_EMP[geo=="EU27_2020"] * 100,
+         EMP_W_AGE_PROP_EU27_100 = EMP_W_AGE_PROP / EMP_W_AGE_PROP[geo=="EU27_2020"] * 100,
+         W_AGE_PROP_EU27_100 = W_AGE_PROP / W_AGE_PROP[geo=="EU27_2020"] * 100,
+         W_AGE_PROP_pjan_EU27_100 = W_AGE_PROP_pjan / W_AGE_PROP_pjan[geo=="EU27_2020"] * 100) |>
   ungroup() |>
 mutate(time = lubridate::year(time),
        agr = ifelse(geo %in% geo_lookup$geo, FALSE, TRUE)) |>
