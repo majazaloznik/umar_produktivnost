@@ -205,7 +205,7 @@ SURS_shift_share_cetrtletni <- PROD_q |>
 # Database connection details
 con <- DBI::dbConnect(RPostgres::Postgres(),
                       dbname = "produktivnost",
-                      host = "192.168.38.21",
+                      host = "localhost",
                       port = 5432,
                       user = "postgres",
                       password = Sys.getenv("PG_PG_PSW"))

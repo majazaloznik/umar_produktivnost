@@ -125,7 +125,7 @@ RULC_BDP_totals_Q <-  master_agr |>
 # Database connection details
 con <- DBI::dbConnect(RPostgres::Postgres(),
                       dbname = "produktivnost",
-                      host = "192.168.38.21",
+                      host = "localhost",
                       port = 5432,
                       user = "postgres",
                       password = Sys.getenv("PG_PG_PSW"))

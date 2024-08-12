@@ -13,6 +13,7 @@ header-includes:
   - \usepackage{float}
   - \usepackage{longtable}
 
+
 ---
 
 # Pregled
@@ -45,17 +46,18 @@ Pomožna skripta, ki pripravi 11 vektorjev za 11 agregacij držav, in tabelo `ge
 *opis*:
 
 1. zajem podatkov iz evrostata iz tabel `nama_10_gdp` (BDP), `nama_10_a10_e` (zaposlenost),  `nama_10_pe` (prebivalstvo) in `demo_pjan` (prebivalstvo po starosti)
-2. izračun agregatov za osem skupin držav (glej poglavje \@ref(Sec:pm) za detajle) in združitev tabel
+2. izračun agregatov za sedem skupin držav (glej poglavje \@ref(Sec:pm) za detajle) in združitev tabel
 3. izračun 22 novih spremenljivk (glej poglavje \@ref(Sec:pmvs) za detajle)
 4. zapis v tabelo `produktivnost_makro`
 
 *spremembe* glede na originalno verzijo: 
 
-+ dodani so novi agregati za EU27 in EA20
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
++ dodani so novi agregati za in EA20
 + dodane so spremenljivke za dekompozicijo produktivnosti glede na working age population
 + za izračun indeksov je uporabljen izračunan EU27 in ne eurostatov EU27_2020 (glej Prilogo \@ref(App:1))
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 11:00:30 na dneve, ko eurostat [release calendar](https://ec.europa.eu/eurostat/news/release-calendar) pravi, da se posodabljajo "Economy and finance GDP and main aggregates/Empl."
 
 ## `02_produktivnost_strukturna.R`
 
@@ -69,8 +71,8 @@ Pomožna skripta, ki pripravi 11 vektorjev za 11 agregacij držav, in tabelo `ge
 *opis*:
 
 1. zajem podatkov iz evrostata iz tabel `nama_10_a64` (BDP), `nama_10_a64_e` (zaposlenost)
-2. izračun agregatov za deset dodatnih SKD grupacij skupin držav (glej poglavje \@ref(Sec:pss) za detajle in združitev tabel
-3. izračun agregatov za osem skupin držav (glej poglavje \@ref(Sec:pss) za detajle) in združitev tabel
+2. izračun agregatov za sedem skupin držav (glej poglavje \@ref(Sec:pss) za detajle) in združitev tabel
+3. izračun agregatov za 14 dodatnih SKD grupacij skupin držav (glej poglavje \@ref(Sec:pss) za detajle in združitev tabel
 4. izračun 20 novih spremenljivk (glej poglavje \@ref(Sec:pssvs) za detajle)
 5. zapis v tabelo `produktivnost_shift_share`
 
@@ -82,9 +84,11 @@ Pomožna skripta, ki pripravi 11 vektorjev za 11 agregacij držav, in tabelo `ge
 
 V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicije na voljo tudi za vse geografske in SKD agregacije.
 
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `VA_share_real`, `PROD_yoy_EMP`, `PROD_yoy_HW`, `STRUCT_shift_HW`, `STRUCT_shift_EMP`
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 11:00:30 na dneve, ko eurostat [release calendar](https://ec.europa.eu/eurostat/news/release-calendar) pravi, da se posodabljajo "Economy and finance GDP and main aggregates/Empl."
+
 
 ## `03_RULC_letno.R`
 
@@ -98,7 +102,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 *opis - 1. del: totals*:
 
 1. zajem podatkov iz evrostata iz tabel `nama_10_gdp` (BDP), `nama_10_a10_e` (zaposlenost)
-2. izračun agregatov za osem skupin držav (glej poglavje \@ref(Sec:rulcatot) za detajle) in združitev tabel
+2. izračun agregatov za sedem skupin držav (glej poglavje \@ref(Sec:rulcatot) za detajle) in združitev tabel
 3. izračun 8 novih spremenljivk (glej poglavje \@ref(Sec:rulcatot) za detajle)
 4. reorientacija v "long table"
 5. izračun medletnih sprememb in indeksov za 2005, 2007, 2008 in 2019
@@ -106,7 +110,8 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 *spremembe -  1. del: totals* glede na originalno verzijo.
 
-+ dodani so novi agregati za EU27 in EA20
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
++ dodani so novi agregati za EA20
 + dodan indeks za 2019
 + zaradi konsistentnosti z ostalimi tabelami so ohranjena "originalna"/angleška imena indikatorjev in dodan nov stolpec `Descriptor` z njihovimi opisnimi imeni
 + popravljeno je napačno imenovanje DV namesto BDP 
@@ -116,6 +121,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 1. zajem podatkov iz evrostata iz tabel `nama_10_a10` (DV), `nama_10_a10_e` (zaposlenost)
 2. izračun agregatov za osem skupin držav (glej poglavje \@ref(Sec:rulcanace) za detajle) in združitev tabel
+3. disagregacija BCDE v BDE in izračun SKD agregatov (glej poglavje \@ref(Sec:rulcanace) za detajle) in združitev tabel
 3. izračun 8 novih spremenljivk (glej poglavje \@ref(Sec:rulcanace) za detajle)
 4. reorientacija v "long table"
 5. izračun medletnih sprememb in indeksov za 2005, 2007, 2008 in 2019
@@ -123,7 +129,8 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 *spremembe -  2. del: NACE* glede na originalno verzijo.
 
-+ dodani so novi agregati za EU27 in EA20
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
++ dodani so novi agregati za EA20
 + dodan indeks za 2019
 + zaradi konsistentnosti z ostalimi tabelami so ohranjena "originalna"/angleška imena indikatorjev in dodan nov stolpec z njihovimi opisnimi imeni
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `COMP_nom_HW`, `COMP_real_HW`, `PROD_nom_HW`
@@ -228,6 +235,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 *opis*:
 
 1. zajem podatkov iz SiStata iz tabel `0301915S.px` (DV), `0301975S.px` (zaposlenost), `0301930S.px` (stroški dela), `0301910S.px`(BDP) in `0301925S.px` (stroški dela skupno)
+2. agregiranje v 14 novih SKD agregatov
 2. izračun 23 novih spremenljivk za shift share analizo (glej poglavje \@ref(Sec:sursssvsa) za detajle)
 3.  zapis v tabelo `SURS_shift_share_letni`
 4. Izračun 11 novih spremenljivk za RULC (glej poglavje \@ref(Sec:sursrulcskda) za detajle)
@@ -243,6 +251,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 *spremembe * glede na originalno verzijo.
 
 + originalna skripta je po novem ločena na dva dela: tale za letne podatke in `05_SURS_RULC_strukt_cetrtletno.R` za četrtletne podatke
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
 + originalna shift share tabela je imela zbrisane SKD kategorije na 1. ravni za katere so podatki tudi na 2. ravni, poleg tega je bila vsota za vse skupaj sešteta (in torej narobe za reale). V tej verziji so vse SKD kategorije ohranjene, ravno tako od SURS-a objavljene vrednosti za vse skupaj (namesto našega preračunavanja). 
 + dodana sta tudi ločena stolpca za SKD kodo in stopnjo agregacije. 
 + dodane so tudi agregacije (ne)menjalni, (ne)poslovni itd. 
@@ -303,7 +312,7 @@ V4 & Višegrajske 4 (CZ, HU, SK, PL) \\
 
 * 28 držav članic
 * štirje originalni agregati iz Eurostata 
-* osem dodatnih agregatov, izračunanih iz podatkov posameznih držav^[Glej prilogo prilogo \@ref(App:1), ampak na kratko: izbira med agregati je v praksi relevanta samo za EU27. Za ostale agregate se je treba zavedati, da spremenljivke, ki uporabljajo stalne cene, torej realne DV ali BDP, pri agregiranju seštevajo ne-aditivne vrednosti, zato gre samo za približke pravih vrednosti, katerih napaka se povečuje dlje, kot je od leta 2010.]
+* sedem dodatnih agregatov, izračunanih iz podatkov posameznih držav. Agregati za stalne cene 2010 so preračunani iz tekočih cen in cen prejšnjega leta, da se zagotovi seštevnost. 
 
 \begin{table}[H]
 \scriptsize
@@ -321,7 +330,6 @@ EU27\_2020 & EU članice po Brexitu \\
 \midrule
 EU13& nove EU članice po 2004  \\ 
 EU14& stare EU članice po Brexitu \\
-EU27& EU članice po Brexitu - isto kot EU27\_2020, samo se pravilno sešteje \\
 EU27noIE & EU članice po Brexitu  brez Irske \\
 EA20 & območje Evra po pristopu Hrvaške   \\
 EAnoIE & Evro območje brez Irske (po pristopu Hrvaške) \\
@@ -346,7 +354,7 @@ v spodnji tabeli so razdeljene v tri skupine:
 
 + originalne spremenljivke, nesprememnjene iz eurostata (v zadnjem stolpcu je ime izvorne tabele)
 + preračunane spremenljivke (v zadnjem stolpcu je nakazan preračun glede na zaporedne številke spremenljivk)
-+ preračunani indeksi za EU27 = 100 ^[Pri tem je uporabljen izračunan agregat `EU27` in ne originalen Eurostatov `EU27_2020`.]
++ preračunani indeksi za EU27 = 100
 
 \begin{table}[H]
 \scriptsize
@@ -356,7 +364,7 @@ v spodnji tabeli so razdeljene v tri skupine:
 \textbf{\#} & \textbf{Oznaka} & \textbf{Opis} & \textbf{Vir / Preračun} \\
 \midrule
 (1) & CP\_MPPS\_EU27\_2020\_B1GQ & BDP, tekoče cene, v mio SKM (EU27 od 2020) & nama\_10\_gdp \\
-(2) & CLV10\_MEUR\_B1GQ & BDP, stalne cene leta 2010, v mio EUR & nama\_10\_gdp \\
+(2) & CLV10\_MEUR\_B1GQ & BDP, stalne cene leta 2010, v mio EUR & nama\_10\_gdp \footnotemark \\
 (3) & THS\_PER\_EMP\_DC & Skupna zaposlenost, domači koncept, v 1000 oseb & nama\_10\_a10\_e \\
 (4) & THS\_HW\_EMP\_DC & Delovne ure, domači koncept, v 1000 & nama\_10\_a10\_e \\
 (5) & THS\_PER\_POP\_NC & Št. Prebivalcev, nacionalni koncept, v 1000 & nama\_10\_pe \\
@@ -375,21 +383,21 @@ v spodnji tabeli so razdeljene v tri skupine:
   \textcolor{gray!50}{(17)} & \textcolor{gray!50}{W\_AGE\_PROP} & \textcolor{gray!50}{Delež preb 20-64 v skupnem prebivalstvu} & \textcolor{gray!50}{(6) / (5)} \\
 (18) & W\_AGE\_PROP\_pjan & Delež preb 20-64 v skupnem prebivalstvu & (6) / (7) \\
 \midrule
-(19) & GDP\_PC\_PPS\_EU27\_100 & \multicolumn{2}{l}{BDP pc v SKM (indeks EU27 = 100) } \\
-\textcolor{gray!50}{(20)} & \textcolor{gray!50}{GDP\_PC\_PPS\_pjan\_EU27\_100} & \multicolumn{2}{l}{\textcolor{gray!50}{BDP pc v SKM (indeks EU27 = 100)} } \\
-(21) & PROD\_PPS\_EU27\_100 & \multicolumn{2}{l}{Produktivnost v SKM (indeks EU27 = 100), na zaposlenega } \\
-(22) & PROD\_PPS\_EU27\_100\_HW & \multicolumn{2}{l}{Produktivnost v SKM (indeks EU27 = 100), na delovno uro } \\
-(23) & EMP\_RATE\_EU27\_100 & \multicolumn{2}{l}{Stopnja zaposlenosti (indeks EU27 = 100) } \\
-(24) & HW\_EMP\_EU27\_100 & \multicolumn{2}{l}{Delovne ure na zap. (indeks EU27 = 100) } \\
-(25) & EMP\_W\_AGE\_PROP\_EU27\_100 & \multicolumn{2}{l}{Delež zaposlenih v preb (20-64) (indeks EU27 = 100) } \\
-\textcolor{gray!50}{(26)} & \textcolor{gray!50}{W\_AGE\_PROP\_EU27\_100} & \multicolumn{2}{l}{\textcolor{gray!50}{Delež preb 20-64 v skupnem prebivalstvu (indeks EU27 = 100) }} \\
-(27) & W\_AGE\_PROP\_pjan\_EU27\_100 & \multicolumn{2}{l}{Delež preb 20-64 v skupnem prebivalstvu (indeks EU27 = 100) } \\
+(19) & GDP\_PC\_PPS\_EU27\_100 & \multicolumn{2}{l}{BDP pc v SKM (indeks EU27\_2020 = 100) } \\
+\textcolor{gray!50}{(20)} & \textcolor{gray!50}{GDP\_PC\_PPS\_pjan\_EU27\_100} & \multicolumn{2}{l}{\textcolor{gray!50}{BDP pc v SKM (indeks EU27\_2020 = 100)} } \\
+(21) & PROD\_PPS\_EU27\_100 & \multicolumn{2}{l}{Produktivnost v SKM (indeks EU27\_2020 = 100), na zaposlenega } \\
+(22) & PROD\_PPS\_EU27\_100\_HW & \multicolumn{2}{l}{Produktivnost v SKM (indeks EU27\_2020 = 100), na delovno uro } \\
+(23) & EMP\_RATE\_EU27\_100 & \multicolumn{2}{l}{Stopnja zaposlenosti (indeks EU27\_2020 = 100) } \\
+(24) & HW\_EMP\_EU27\_100 & \multicolumn{2}{l}{Delovne ure na zap. (indeks EU27\_2020 = 100) } \\
+(25) & EMP\_W\_AGE\_PROP\_EU27\_100 & \multicolumn{2}{l}{Delež zaposlenih v preb (20-64) (indeks EU27\_2020 = 100) } \\
+\textcolor{gray!50}{(26)} & \textcolor{gray!50}{W\_AGE\_PROP\_EU27\_100} & \multicolumn{2}{l}{\textcolor{gray!50}{Delež preb 20-64 v skupnem prebivalstvu (indeks EU27\_2020 = 100) }} \\
+(27) & W\_AGE\_PROP\_pjan\_EU27\_100 & \multicolumn{2}{l}{Delež preb 20-64 v skupnem prebivalstvu (indeks EU27\_2020 = 100) } \\
 \bottomrule
 \end{tabular}
 \caption{Spremenljivke v tabeli `produktivnost\_makro`}
 \label{tab:eurostat_summary}
 \end{table}
-
+\footnotetext[1]{V primeru geografskih agregatov so vredosti CLV10\_MEUR izračunane iz CP in PYP vrednosti objavljenih v isti tabeli.}
 
 Posebna pozornost je potrebna glede naslednjih parov spremenljivk 
 
@@ -407,14 +415,13 @@ Posebna pozornost je potrebna glede naslednjih parov spremenljivk
 * `level_2` so SKD oznake na drugi ravni - vendar niso kompletne oz. so kompletne skupaj z ustreznimi agregati,
 * `aggr` so agregirane oznake, kar lahko pomeni agregiranje na drugi ravni (e.g. `C16-C18`), na prvi ravni (e.g. `G-I`) in seveda vse  skupaj (`TOTAL`)
 
-*Poleg 91 originalnih klasifikacij, je dodanih še 12 naših (glej tabelo \ref{tbl:umar}).*
+*Poleg 91 originalnih klasifikacij, je dodanih še 14 naših (glej tabelo \ref{tbl:umar}).*
 
-Pri dodatnih agregatih se je treba zavedati, da spremenljivke, ki uporabljajo stalne cene, torej realne DV ali BDP, pri agregiranju seštevajo ne-aditivne vrednosti, zato gre samo za približke pravih vrednosti, katerih napaka se povečuje dlje, kot je od leta 2010.
 
 ```{r 2table, echo=FALSE, results='asis', warning = FALSE, message = FALSE}
 suppressPackageStartupMessages(library(kableExtra))
 nace_codes <- readRDS("../data/nace_codes.rds")
-umar_codes <- nace_codes[92:103,]
+umar_codes <- nace_codes[92:105,]
 kable(umar_codes, "latex", longtable = FALSE, caption = "SKD šifrant dodatne agregacije Umar\\label{tbl:umar}",  row.names = FALSE, booktabs = TRUE,  placement = "H")  |> 
   kable_styling(latex_options = c("repeat_header")) |> 
   column_spec(1, width = "5cm") |> 
@@ -434,9 +441,10 @@ kable(nace_codes[1:91,], "latex", longtable = TRUE, caption = "SKD šifrant NACE
 
 
 **geo** 
+
 * 28 držav članic
 * štirje originalni agregati iz Eurostata 
-* osem dodatnih agregatov, izračunanih iz podatkov posameznih držav^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+* sedem dodatnih agregatov, izračunanih iz podatkov posameznih držav.
 
 
 \begin{table}[H]
@@ -455,7 +463,6 @@ EU27\_2020 & EU članice po Brexitu \\
 \midrule
 EU13& nove EU članice po 2004  \\ 
 EU14& stare EU članice po Brexitu \\
-EU27& EU članice po Brexitu - isto kot EU27\_2020, samo se pravilno sešteje \\
 EU27noIE & EU članice po Brexitu  brez Irske \\
 EA20 & območje Evra po pristopu Hrvaške   \\
 EAnoIE & Evro območje brez Irske (po pristopu Hrvaške) \\
@@ -485,7 +492,7 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \midrule
 (1) & VA\_nom & Dodana vrednost, tekoče cene, v mio EUR& nama\_10\_a64 \\
 (2) & VA\_share\_nom & delež nom. dodane vrednosti v sektorju & (1) / $\Sigma$(1)\\
-(3) & VA\_real & Dodana vrednost, stalne cene (2010), v mio EUR & nama\_10\_a64 \\
+(3) & VA\_real & Dodana vrednost, stalne cene (2010), v mio EUR & nama\_10\_a64 \footnotemark \\
 (4) & VA\_share\_real & delež real. dodane vrednosti v sektorju & (3) / $\Sigma$(3)\\
 (5) & THS\_HW & Delovne ure, domači koncept, v 1000 & nama\_10\_a64\_e \\
 (6) & THS\_PER & Zaposlenost, domači koncept, v 1000 & nama\_10\_a64\_e \\
@@ -515,7 +522,7 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 \end{tabular}
 \caption{Spremenljivke v tabeli \texttt{produktivnost\_shift\_share}}
 \end{table}
-
+\footnotetext[2]{V primeru geografskih in SKD agregatov in so stalne cene za dodano vrednost izračunane in CP in PYP vrednosti objavljenih v isti tabeli.}
 
 ## Tabela `RULC_BDP_total_letni` {#Sec:rulcatot}
 
@@ -526,7 +533,7 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 
 * 28 držav članic
 * štirje originalni agregati iz Eurostata 
-* osem dodatnih agregatov, izračunanih iz podatkov posameznih držav: ^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+* sedem dodatnih agregatov, izračunanih iz podatkov posameznih držav: 
 
 \begin{table}[H]
 \scriptsize
@@ -544,7 +551,6 @@ EU27\_2020 & EU članice po Brexitu \\
 \midrule
 EU13& nove EU članice po 2004  \\ 
 EU14& stare EU članice po Brexitu \\
-EU27& EU članice po Brexitu - isto kot EU27\_2020, samo se pravilno sešteje \\
 EU27noIE & EU članice po Brexitu  brez Irske \\
 EA20 & območje Evra po pristopu Hrvaške   \\
 EAnoIE & Evro območje brez Irske (po pristopu Hrvaške) \\
@@ -570,7 +576,7 @@ V spodnji tabeli so prikazane vrednosti spremenljivk Indicator in Descriptor v t
 \textbf{\#} & \textbf{Indicator} & \textbf{Descriptor} & \textbf{Vir / Preračun} \\
 \midrule
  (1) & GDP\_nom & BDP tekoče cene & nama\_10\_gdp\\
- (2) & GDP\_real & BDP stalne cene 2010 & nama\_10\_gdp \\
+ (2) & GDP\_real & BDP stalne cene 2010 & nama\_10\_gdp \footnotemark \\
  (3) & COMP\_nom & sredstva za zaposlene & nama\_10\_gdp\\
  (4) & COMP\_SAL\_nom & plače & nama\_10\_gdp\\
  (5) & COMP\_CONTR\_nom & socialni prispevki & nama\_10\_gdp\\
@@ -596,21 +602,18 @@ V spodnji tabeli so prikazane vrednosti spremenljivk Indicator in Descriptor v t
 \end{tabular}
 \caption{Vrednosti spremenljivk Indicator in Descriptor v tabeli \texttt{RULC\_BDP\_total\_letni}}
 \end{table}
+\footnotetext[3]{V primeru geografskih agregatov in so stalne cene za BDP izračunane in CP in PYP vrednosti objavljenih v isti tabeli.}
 
 **Value** - ker gre za dolgo tabelo, so vse vrednosti v stolpcu `Value`, spremenljivka pa je identificirana v stolpcih `Indicator` oz. `Descriptor`
 
-
 **YOY, Indeks2005, Indeks2007, Indeks2008** za vsako vrednost je izračunana medletna sprememba, ter štirje indeksi z baznimi leti 2005, 2007, 2008 in 2019.
-
-
-
 
 ## Tabela `RULC_VA_NACE_letni` {#Sec:rulcanace}
 
 *Prejšnja lokacija tabele*: `RULC_letni.accdb` tabela `RULC_NACE`
 
 
-**nace_r2**: Poleg originalnih 12 NACE klasifikacij, je dodanih še šest naših:^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+**nace_r2**: Poleg originalnih 12 NACE klasifikacij, je dodanih še šest naših:
 
 \begin{table}[H]
 \scriptsize
@@ -632,12 +635,12 @@ M\_N              & Professional, scientific and technical activities; administr
 O-Q               & Public administration, defence, education, human health and socia...\\
 R-U               & Arts, entertainment and recreation; other service activities; act...\\
 \midrule                                                        
-MENJALNI\_sektor   & A, B-E, G-I, J                                                    \\
-NEMENJALNI\_sektor & F, K, L, M\_N, O-Q, R-U                                            \\
-POSLOVNI\_sektor   & B-E, F, G-I, J, K, M\_N                                            \\
-NEPOSLOVNI\_sektor & A, L, O-Q, R-U                                                    \\
-TRZNE              & G-I, J, K, L, M\_N                                                 \\
-OSTALE             & A, B, D, E, O-Q, R-U \\
+Menjalni   & A, B-E, G-I, J                                                    \\
+Nemenjalni & F, K, L, M\_N, O-Q, R-U                                            \\
+Poslovni   & B-E, F, G-I, J, K, M\_N                                            \\
+Neposlovni & A, L, O-Q, R-U                                                    \\
+Tržni              & G-I, J, K, L, M\_N                                                 \\
+Ostali             & A, BDE, O-Q, R-U \\
 \bottomrule
 \end{tabular}
 \caption{Vrednosti spremenljivk SKD in DEJAVNOST v tabeli \texttt{SURS\_shift\_share\_cetrtletni}}
@@ -648,7 +651,7 @@ OSTALE             & A, B, D, E, O-Q, R-U \\
 
 * 28 držav članic
 * štirje originalni agregati iz Eurostata 
-* osem dodatnih agregatov, izračunanih iz podatkov posameznih držav:^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+* sedem dodatnih agregatov, izračunanih iz podatkov posameznih držav:
 
 \begin{table}[H]
 \scriptsize
@@ -666,7 +669,6 @@ EU27\_2020 & EU članice po Brexitu \\
 \midrule
 EU13& nove EU članice po 2004  \\ 
 EU14& stare EU članice po Brexitu \\
-EU27& EU članice po Brexitu - isto kot EU27\_2020, samo se pravilno sešteje \\
 EU27noIE & EU članice po Brexitu  brez Irske \\
 EA20 & območje Evra po pristopu Hrvaške   \\
 EAnoIE & Evro območje brez Irske (po pristopu Hrvaške) \\
@@ -692,7 +694,7 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \textbf{\#} & \textbf{Indicator} & \textbf{Descriptor} & \textbf{Vir / Preračun} \\
 \midrule
 (1) & VA\_nom & DV tekoče cene & nama\_10\_a10\\
- (2) & VA\_real & DV stalne cene 2010 & nama\_10\_a10 \\
+ (2) & VA\_real & DV stalne cene 2010 & nama\_10\_a10 \footnotemark \\
  (3) & COMP\_nom & sredstva za zaposlene & nama\_10\_a10\\
  (4) &THS\_HW\_EMP\_DC & zaposlenost - delovne ure & nama\_10\_a10\_e\\
  (5) & THS\_HW\_SAL\_DC & zaposleni - delovne ure & nama\_10\_a10\_e\\
@@ -714,6 +716,7 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \end{tabular}
 \caption{Vrednosti spremenljivk Indicator in Descriptor v tabeli \texttt{RULC\_VA\_NACE\_letni}}
 \end{table}
+\footnotetext[4]{V primeru geografskih in SKD agregatov in so stalne cene za dodano vrednost izračunane in CP in PYP vrednosti objavljenih v isti tabeli.}
 
 **Value** - ker gre za dolgo tabelo, so vse vrednosti v stolpcu `Value`, spremenljivka pa je identificirana v stolpcih `Indicator` oz. `Descriptor`
 
@@ -1163,7 +1166,7 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 
 **LETO** letnica
 
-**SKD**  & **DEJAVNOST** poleg "Skupaj", so dejavnosti na voljo v tej tabeli kombinacija 1. in 2. ravni SKD in sicer tako, da so vse dejavnosti na 1. ravni, na 2. ravni pa so disagregirani samo izbrani sektorji. V spodnji tabeli so označeni v stolpcu 2. raven, niso pa tudi posebej našteti. Poleg originalnih iz Si-Stata je dodanih še šest dodatnih agregatov.^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+**SKD**  & **DEJAVNOST** poleg "Skupaj", so dejavnosti na voljo v tej tabeli kombinacija 1. in 2. ravni SKD in sicer tako, da so vse dejavnosti na 1. ravni, na 2. ravni pa so disagregirani samo izbrani sektorji. V spodnji tabeli so označeni v stolpcu 2. raven, niso pa tudi posebej našteti. Poleg originalnih iz Si-Stata je dodanih še 14 dodatnih agregatov opisanih v spodnjem delu tabele.
 
 \begin{table}[H]
 \scriptsize
@@ -1194,12 +1197,20 @@ S &Druge dejavnosti & \checkmark\\
 T &Dejavnost gospodinjstev z zaposlenim osebjem (97-98) &--- \\       
 U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
 \midrule   
- Nemenjalni & F, K, L, MN, OPQ, RST &                       \\                                      
- Menjalni   & A, BCDE, GHI, J         &                    \\                                    
+ Nemenjalni & F, K, L, M, N, O, P, Q, R, S, T &               \\                                    
+ Menjalni   & A, B, C, D, E, G, H, I, J         &                    \\                              
  Neposlovni & A, L, OPQ, RST      &                       \\                                  
  Poslovni   & BCDE, F, GHI, J, K, MN    &  \\
- Tržne      & GHI, J, K, L, MN &\\
- Ostale     & A, BDE, OPQ, RS &\\
+ High tech manuf & 21, 26 \\
+ Med-high tech manuf & 20, 27, 28, 29, 30\\
+ Med-low tech manuf & 19, 22, 23, 24, 25 \\
+ Low tech manuf & 10, 11, 12, 13, 14, 15, 16, 17, 18, 31, 32\\
+ Knowledge market services & J, M \\
+ Rest market services & H, G, I, K, N \\
+ Tržni      & GHI, J, K, L, MN &\\
+ Ostali     & A, BDE, OPQ, RS &\\
+ Energetsko intenzivni & 17, 20, 23, 24 \\
+ Predelovalni neenergetski & 10, 11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 25, 26, 27, 28, 29, 30, 31, 32, 33 \\
  SKUPAJ     & Dejavnost - SKUPAJ    &\\
 \bottomrule
 \end{tabular}
@@ -1220,7 +1231,7 @@ U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
 \midrule
 (1) & VA\_nom & Dodana vrednost, tekoče cene, v mio EUR & 0301915S \\
 (2) & VA\_share\_nom & delež nom. dodane vrednosti v sektorju & (1) / $\Sigma$(1)\\
-(3) & VA\_real & Dodana vrednost, stalne cene (2010), v mio EUR & 0301915S \\
+(3) & VA\_real & Dodana vrednost, stalne cene (2010), v mio EUR & 0301915S \footnotemark \\
 (4) & VA\_share\_real & delež real. dodane vrednosti v sektorju & (3) / $\Sigma$(3)\\
 (5) & EMP\_HW & Delovne ure, domači koncept, v 1000 & 0301975S \\
 (6) & EMP\_PER & Zaposlenost, domači koncept, v 1000 & 0301975S \\
@@ -1251,7 +1262,7 @@ U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
 \caption{Spremenljivke v tabeli \texttt{SURS\_shift\_share\_letni}}
 \label{tab:sursssvs}
 \end{table}
-
+\footnotetext[5]{V primeru SKD agregatov in so stalne cene za dodano vrednost izračunane in CP in PYP vrednosti objavljenih v isti tabeli.}
 
 
 ## Tabela `SURS_RULC_VA_SKD_letni ` {#Sec:sursrulcskda}
@@ -1261,14 +1272,14 @@ U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
 **LETO** letnica 
 
 
-**SKD**  & **DEJAVNOST** poleg "Skupaj", so dejavnosti na voljo v tej tabeli kombinacija 1. in 2. ravni SKD in sicer tako, da so vse dejavnosti na 1. ravni, na 2. ravni pa so disagregirani samo izbrani sektorji. V spodnji tabeli so označeni v stolpcu 2. raven, niso pa tudi posebej našteti. Poleg originalnih iz Si-Stata je dodanih še šest dodatnih agregatov.^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+**SKD**  & **DEJAVNOST** poleg "Skupaj", so dejavnosti na voljo v tej tabeli kombinacija 1. in 2. ravni SKD in sicer tako, da so vse dejavnosti na 1. ravni, na 2. ravni pa so disagregirani samo izbrani sektorji. V spodnji tabeli so označeni v stolpcu 2. raven, niso pa tudi posebej našteti. Poleg originalnih iz Si-Stata je dodanih še 14 dodatnih agregatov.
 
 \begin{table}[H]
 \scriptsize
 \centering
 \begin{tabular}{lll}
 \toprule
-\textbf{SKD}\ & textbf{DEJAVNOST} &   \textbf{2. raven}\\
+\textbf{SKD}\ & \textbf{DEJAVNOST} &   \textbf{2. raven}\\
 \midrule                                                        
 A &Kmetijstvo in lov, gozdarstvo, ribištvo & \checkmark\\                    
 B &Rudarstvo (05-09) & --- \\                                          
@@ -1296,8 +1307,16 @@ U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
  Menjalni   & A, BCDE, GHI, J         &                    \\                                    
  Neposlovni & A, L, OPQ, RST      &                       \\                                  
  Poslovni   & BCDE, F, GHI, J, K, MN    &  \\
- Tržne      & GHI, J, K, L, MN &\\
- Ostale     & A, BDE, OPQ, RS &\\
+ High tech manuf & 21, 26 \\
+ Med-high tech manuf & 20, 27, 28, 29, 30\\
+ Med-low tech manuf & 19, 22, 23, 24, 25 \\
+ Low tech manuf & 10, 11, 12, 13, 14, 15, 16, 17, 18, 31, 32\\
+ Knowledge market services & J, M \\
+ Rest market services & H, G, I, K, N \\
+ Tržni      & GHI, J, K, L, MN &\\
+ Ostali     & A, BDE, OPQ, RS &\\
+ Energetsko intenzivni & 17, 20, 23, 24 \\
+ Predelovalni neenergetski & 10, 11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 25, 26, 27, 28, 29, 30, 31, 32, 33 \\
  SKUPAJ     & Dejavnost - SKUPAJ    &\\
 \bottomrule
 \end{tabular}
@@ -1318,7 +1337,7 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \textbf{\#} & \textbf{Indicator} & \textbf{Descriptor} & \textbf{Vir / Preračun} \\
 \midrule
  (1) & VA\_nom  & DV tekoče cene & 0301915S\\
- (2) & VA\_real & DV stalne cene 2010 & 0301915S \\
+ (2) & VA\_real & DV stalne cene 2010 & 0301915S \footnotemark \\
  (3) & EMP\_PER & zaposlenost (1000) & 0301975S\\
  (4) & EMP\_HW  & zaposlenost - delovne ure (1000) & 0301975S\\
  (5) & SAL\_PER & zaposleni (1000)  & 0301975S\\
@@ -1341,6 +1360,7 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 \caption{Vrednosti spremenljivk Indicator in Descriptor v tabeli \texttt{SURS\_RULC\_VA\_SKD\_letni}}
 \label{tab:sursrucla}
 \end{table}
+\footnotetext[6]{V primeru SKD agregatov in so stalne cene za dodano vrednost izračunane in CP in PYP vrednosti objavljenih v isti tabeli.}
 
 **Value** - ker gre za dolgo tabelo, so vse vrednosti v stolpcu `Value`, spremenljivka pa je identificirana v stolpcih `Indicator` oz. `Descriptor`
 

@@ -2,16 +2,13 @@
 #         PRODUKTIVNOST IN BDP v PPS
 #         revizija MZ Maj 2024, original Katarina, Avgust 2020
 ################################################################################
-
 ####   Knjižnjice   ############################################################
 library(eurostat)
 library(dplyr)
-library(data.table)
-
+library(tidyr)
 ####   setup    ################################################################
 source("R/00_geo_lookup.R") # geografije
-
-last_year <- lubridate::year(Sys.Date()) - 1
+source("R/helper_functions.R")
 
 ################################################################################
 #                         Download Podatkov                                    #
@@ -19,16 +16,16 @@ last_year <- lubridate::year(Sys.Date()) - 1
 GDP <- get_eurostat("nama_10_gdp",
                     filters = list(
                       geo = geo_subset,
-                      time = 1995:last_year,
+                      sinceTimePeriod = 1995,
                       na_item = "B1GQ", # Gross domestic product at market prices
-                      unit = c("CP_MPPS_EU27_2020" , "CLV10_MEUR")))|> #Current prices, million purchasing power standards (PPS, EU27 from 2020) + chain linked volumes 2010, million eur
+                      unit = c("CP_MPPS_EU27_2020", "CP_MEUR", "CLV10_MEUR", "PYP_MEUR")))|> #Current prices, million purchasing power standards (PPS, EU27 from 2020) + chain linked volumes 2010, million eur
   select(-freq) |>
   filter(!is.na(values))
 
 EMP <- get_eurostat("nama_10_a10_e",
                     filters = list(
                       geo = geo_subset,
-                      time = 1995:last_year,
+                      sinceTimePeriod = 1995,
                       na_item = "EMP_DC", # Total employment domestic concept
                       unit = c("THS_PER" , "THS_HW"), # thousand persons + thousand hours worked
                       nace_r2 ="TOTAL")) |>
@@ -38,18 +35,18 @@ EMP <- get_eurostat("nama_10_a10_e",
 POP <- get_eurostat("nama_10_pe",
                     filters = list(
                       geo = geo_subset,
-                      time = 1995:last_year,
+                      sinceTimePeriod = 1995,
                       na_item = "POP_NC", # Total population national concept
                       unit = c("THS_PER" ))) |>  # thousand persons
   select(-freq) |>
   filter(!is.na(values))
 
 POP2 <- get_eurostat("demo_pjan",
-                    filters = list(
-                      geo = geo_subset,
-                      time = 1995:last_year,
-                      sex = "T", # Total
-                      age = c("TOTAL", paste0("Y", 20:64)))) |>  #age groups
+                     filters = list(
+                       geo = geo_subset,
+                       sinceTimePeriod = 1995,
+                       sex = "T", # Total
+                       age = c("TOTAL", paste0("Y", 20:64)))) |>  #age groups
   select(-freq, -sex) |>
   rename(na_item =age) |>
   filter(!is.na(values)) |>
@@ -64,67 +61,30 @@ POP2 <- get_eurostat("demo_pjan",
 ################################################################################
 #                 Definiranje dodatnih geografskih agregatov                   #
 ################################################################################
-# funkcija za agregiranje
-aggregate <- function(df, group, group_name) {
-    df %>%
-      filter(geo %in% group) %>%
-      group_by(na_item, time, unit) %>%
-      summarise(values = sum(values, na.rm = TRUE), .groups = 'drop') %>%
-      mutate(geo = group_name)
-}
-
-# agregiranje za GDP
-gdp_eu13 <- aggregate(GDP,country_code_EU13, "EU13")
-gdp_eu14 <- aggregate(GDP,country_code_EU14, "EU14")
-gdp_EU27 <- aggregate(GDP,country_code_EU27, "EU27")
-gdp_EU27noIE <- aggregate(GDP,country_code_EU27_noIE, "EU27noIE")
-gdp_EA20 <- aggregate(GDP,country_code_EA20, "EA20")
-gdp_EAnoIE <- aggregate(GDP,country_code_EA_noIE, "EAnoIE")
-gdp_inovatorke <- aggregate(GDP,country_code_inovatorke, "inovatorke")
-gdp_V4 <- aggregate(GDP,country_code_V4, "V4")
+# agregiranje za GDP in preračun CLV-jev
+GDP_agr <- GDP |>
+  bind_rows(lapply(names(geo_aggregations), function(label) {
+    aggregate_geo_and_calculate_clv_annual(GDP, geo_aggregations[[label]], label)})) |>
+  filter(!unit %in% c("CP_MEUR", "PYP_MEUR"))
 
 # agregiranje za EMP
-emp_eu13 <- aggregate(EMP,country_code_EU13, "EU13")
-emp_eu14 <- aggregate(EMP,country_code_EU14, "EU14")
-emp_EU27 <- aggregate(EMP,country_code_EU27, "EU27")
-emp_EU27noIE <- aggregate(EMP,country_code_EU27_noIE, "EU27noIE")
-emp_EA20 <- aggregate(EMP,country_code_EA20, "EA20")
-emp_EAnoIE <- aggregate(EMP,country_code_EA_noIE, "EAnoIE")
-emp_inovatorke <- aggregate(EMP,country_code_inovatorke, "inovatorke")
-emp_V4 <- aggregate(EMP,country_code_V4, "V4")
+EMP_agr <- EMP |>
+  bind_rows(lapply(names(geo_aggregations), function(label) {
+    aggregate_geo_annual(EMP, geo_aggregations[[label]], label)}))
 
 # agregiranje za POP
-pop_eu13 <- aggregate(POP,country_code_EU13, "EU13")
-pop_eu14 <- aggregate(POP,country_code_EU14, "EU14")
-pop_EU27 <- aggregate(POP,country_code_EU27, "EU27")
-pop_EU27noIE <- aggregate(POP,country_code_EU27_noIE, "EU27noIE")
-pop_EA20 <- aggregate(POP,country_code_EA20, "EA20")
-pop_EAnoIE <- aggregate(POP,country_code_EA_noIE, "EAnoIE")
-pop_inovatorke <- aggregate(POP,country_code_inovatorke, "inovatorke")
-pop_V4 <- aggregate(POP,country_code_V4, "V4")
+POP_agr <- POP |>
+  bind_rows(lapply(names(geo_aggregations), function(label) {
+    aggregate_geo_annual(POP, geo_aggregations[[label]], label)}))
 
 # agregiranje za POP2
-pop2_eu13 <- aggregate(POP2,country_code_EU13, "EU13")
-pop2_eu14 <- aggregate(POP2,country_code_EU14, "EU14")
-pop2_EU27 <- aggregate(POP2,country_code_EU27, "EU27")
-pop2_EU27noIE <- aggregate(POP2,country_code_EU27_noIE, "EU27noIE")
-pop2_EA20 <- aggregate(POP2,country_code_EA20, "EA20")
-pop2_EAnoIE <- aggregate(POP2,country_code_EA_noIE, "EAnoIE")
-pop2_inovatorke <- aggregate(POP2,country_code_inovatorke, "inovatorke")
-pop2_V4 <- aggregate(POP2,country_code_V4, "V4")
+POP2_agr <- POP2 |>
+  bind_rows(lapply(names(geo_aggregations), function(label) {
+    aggregate_geo_annual(POP2, geo_aggregations[[label]], label)}))
 
 ####  Združitev tabel   ########################################################
-GDP_agr <- bind_rows(GDP, gdp_eu13, gdp_eu14, gdp_EU27, gdp_EU27noIE,
-                 gdp_EA20, gdp_EAnoIE, gdp_inovatorke, gdp_V4)
-EMP_agr <- bind_rows(EMP, emp_eu13, emp_eu14, emp_EU27, emp_EU27noIE,
-                 emp_EA20, emp_EAnoIE, emp_inovatorke, emp_V4)
-POP_agr <- bind_rows(POP, pop_eu13, pop_eu14, pop_EU27, pop_EU27noIE,
-                 pop_EA20, pop_EAnoIE, pop_inovatorke, pop_V4)
-POP2_agr <- bind_rows(POP2, pop2_eu13, pop2_eu14, pop2_EU27, pop2_EU27noIE,
-                  pop2_EA20, pop2_EAnoIE, pop2_inovatorke, pop2_V4)
 master_agr <- bind_rows(GDP_agr, EMP_agr, POP_agr, POP2_agr)
 
-# saveRDS(master, "data/master01.rds")
 ################################################################################
 #                               PRERAČUNI                                      #
 ################################################################################
@@ -156,8 +116,8 @@ data_macro <- master_agr %>%
          W_AGE_PROP_EU27_100 = W_AGE_PROP / W_AGE_PROP[geo=="EU27_2020"] * 100,
          W_AGE_PROP_pjan_EU27_100 = W_AGE_PROP_pjan / W_AGE_PROP_pjan[geo=="EU27_2020"] * 100) |>
   ungroup() |>
-mutate(time = lubridate::year(time),
-       agr = ifelse(geo %in% geo_lookup$geo, FALSE, TRUE)) |>
+  mutate(time = lubridate::year(time),
+         agr = ifelse(geo %in% geo_lookup$geo, FALSE, TRUE)) |>
   select(geo, agr, time, CP_MPPS_EU27_2020_B1GQ,
          CLV10_MEUR_B1GQ, THS_PER_EMP_DC, THS_HW_EMP_DC, THS_PER_POP_NC,
          NR_20_64, NR_TOTAL, GDP_PC_PPS, GDP_PC_PPS_pjan, PROD_PPS,
@@ -167,12 +127,11 @@ mutate(time = lubridate::year(time),
          EMP_RATE_EU27_100, HW_EMP_EU27_100, EMP_W_AGE_PROP_EU27_100,
          W_AGE_PROP_EU27_100, W_AGE_PROP_pjan_EU27_100)
 
-# saveRDS(data_macro, "data/data_macro01.rds")
 #### zapis na postgres bazo ####################################################
 # Database connection details
 con <- DBI::dbConnect(RPostgres::Postgres(),
                       dbname = "produktivnost",
-                      host = "192.168.38.21",
+                      host = "localhost",
                       port = 5432,
                       user = "postgres",
                       password = Sys.getenv("PG_PG_PSW"))
