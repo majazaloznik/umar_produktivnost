@@ -10,6 +10,7 @@ library(dplyr)
 library(lubridate)
 library(zoo)
 ####   setup    ################################################################
+source("R/00_geo_lookup.R") # geografije
 source("R/00_skd_lookup.R", encoding = "UTF-8")
 
 
@@ -58,7 +59,9 @@ stroski <- bulk_stroski |>
   rename(DEJAVNOST = TRANSAKCIJE) |>
   select(-VRSTA.PODATKA) |>
   mutate(across(where(is.factor), as.character)) |>
-  mutate(SKD = recode(DEJAVNOST, !!!transakcije_lookup, .default = NA_character_))
+  mutate(SKD = recode(DEJAVNOST, !!!transakcije_lookup, .default = NA_character_)) |>
+  mutate(DEJAVNOST = recode( SKD, !!!setNames(names(dejanvost_lookup), dejanvost_lookup),
+         .default = NA_character_))
 
 tot_BDP <- bulk_DV |>
   mutate(across(where(is.factor), as.character)) |>
@@ -159,7 +162,7 @@ RULC_q <- PROD_q |>
   left_join(stroski_agr)
 
 # združitev baz total
-tot_RULC_q <-tot_BDP |>
+tot_RULC_q <- tot_BDP |>
   left_join(tot_zap) |>
   left_join(tot_stroski) |>
   mutate(time = as.Date(as.yearqtr(ČETRTLETJE, format = "%YQ%q")),.keep = "unused") |>
