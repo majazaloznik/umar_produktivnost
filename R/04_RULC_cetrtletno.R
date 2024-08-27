@@ -12,7 +12,7 @@ library(lubridate)
 
 ####   setup    ################################################################
 source("R/00_geo_lookup.R") # geografije
-source("R/00_skd_lookup.R") # skd klasifikaicje
+source("R/00_skd_lookup.R", encoding = "UTF-8") # skd klasifikaicje
 
 ################################################################################
 #                        RULC_BDP_totals_Q                                     #
@@ -58,7 +58,7 @@ gdp_eu13 <- aggregate(GDP,country_code_EU13, "EU13")
 gdp_eu14 <- aggregate(GDP,country_code_EU14, "EU14")
 gdp_EU27 <- aggregate(GDP,country_code_EU27, "EU27")
 gdp_EU27noIE <- aggregate(GDP,country_code_EU27_noIE, "EU27noIE")
-gdp_EA20 <- aggregate(GDP,country_code_EU27, "EA20")
+gdp_EA20 <- aggregate(GDP,country_code_EA20, "EA20")
 gdp_EAnoIE <- aggregate(GDP,country_code_EA_noIE, "EAnoIE")
 gdp_inovatorke <- aggregate(GDP,country_code_inovatorke, "inovatorke")
 gdp_V4 <- aggregate(GDP,country_code_V4, "V4")
@@ -212,7 +212,7 @@ va_eu13 <- aggregate(VA_agr,country_code_EU13, "EU13")
 va_eu14 <- aggregate(VA_agr,country_code_EU14, "EU14")
 va_EU27 <- aggregate(VA_agr,country_code_EU27, "EU27")
 va_EU27noIE <- aggregate(VA_agr,country_code_EU27_noIE, "EU27noIE")
-va_EA20 <- aggregate(VA_agr,country_code_EU27, "EA20")
+va_EA20 <- aggregate(VA_agr,country_code_EA20, "EA20")
 va_EAnoIE <- aggregate(VA_agr,country_code_EA_noIE, "EAnoIE")
 va_inovatorke <- aggregate(VA_agr,country_code_inovatorke, "inovatorke")
 va_V4 <- aggregate(VA_agr,country_code_V4, "V4")
