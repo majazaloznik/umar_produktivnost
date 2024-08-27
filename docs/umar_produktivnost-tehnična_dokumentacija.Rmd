@@ -34,7 +34,7 @@ Pomožna skripta, ki pripravi 11 vektorjev za 11 agregacij držav, in tabelo `ge
 
 *posodabljanje* - Se posodablja ročno v primeru spremeb v članstvu EU, EA ali držav, ki veljajo za *vodilne inovatorke*
 
-## `01_produktivnost_makro.R`
+## `01_produktivnost_makro.R` {#Sec:skripta1}
 
 *originalna verzija* - `arhiv\1_Macro_PROD.R`
 
@@ -53,13 +53,12 @@ Pomožna skripta, ki pripravi 11 vektorjev za 11 agregacij držav, in tabelo `ge
 *spremembe* glede na originalno verzijo: 
 
 + agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
-+ dodani so novi agregati za in EA20
++ dodani so novi agregati za EA20
 + dodane so spremenljivke za dekompozicijo produktivnosti glede na working age population
-+ za izračun indeksov je uporabljen izračunan EU27 in ne eurostatov EU27_2020 (glej Prilogo \@ref(App:1))
 
 *posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 11:00:30 na dneve, ko eurostat [release calendar](https://ec.europa.eu/eurostat/news/release-calendar) pravi, da se posodabljajo "Economy and finance GDP and main aggregates/Empl."
 
-## `02_produktivnost_strukturna.R`
+## `02_produktivnost_strukturna.R` {#Sec:skripta2}
 
 *originalna verzija* - `arhiv\2_Structural_PROD.R`
 
@@ -90,7 +89,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 *posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 11:00:30 na dneve, ko eurostat [release calendar](https://ec.europa.eu/eurostat/news/release-calendar) pravi, da se posodabljajo "Economy and finance GDP and main aggregates/Empl."
 
 
-## `03_RULC_letno.R`
+## `03_RULC_letno.R` {#Sec:skripta3}
 
 *originalna verzija* - `arhiv\3_RULC_A.R`
 
@@ -135,10 +134,10 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 + zaradi konsistentnosti z ostalimi tabelami so ohranjena "originalna"/angleška imena indikatorjev in dodan nov stolpec z njihovimi opisnimi imeni
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `COMP_nom_HW`, `COMP_real_HW`, `PROD_nom_HW`
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 11:00:30 na dneve, ko eurostat [release calendar](https://ec.europa.eu/eurostat/news/release-calendar) pravi, da se posodabljajo "Economy and finance GDP and main aggregates/Empl."
 
 
-## `04_RULC_četrtletno.R`
+## `04_RULC_četrtletno.R` {#Sec:skripta4}
 
 *originalna verzija* - `arhiv\4_RULC_Q.R`
 
@@ -150,7 +149,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 *opis - 1. del: totals*:
 
 1. zajem podatkov iz evrostata iz tabel `namq_10_gdp` (BDP), `namq_10_a10_e` (zaposlenost)
-2. izračun agregatov za osem skupin držav (glej poglavje \@ref(Sec:rulcqtot) za detajle) in združitev tabel
+2. izračun agregatov za sedem skupin držav (glej poglavje \@ref(Sec:rulcqtot) za detajle) in združitev tabel
 3. izračun 8 novih spremenljivk (glej poglavje \@ref(Sec:rulcqtot) za detajle)
 4. reorientacija v "long table"
 5. izračun medletnih sprememb in indeksov za 2005, 2007, 2008 in 2019
@@ -158,7 +157,8 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 *spremembe -  1. del: totals* glede na originalno verzijo.
 
-+ dodani so novi agregati za EU27 in EA20
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
++ geo agregati so samo popolni - če manjkajo podatki za katero od držav, potem tudi agregata ni za tisto obdobje.
 + dodan indeks in njegova zglajena verzija še za 2019
 + zaradi konsistentnosti z ostalimi tabelami so ohranjena "originalna" imena indikatorjev in dodan nov stolpec z njihovimi opisnimi imeni
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `COMP_nom_HW`, `COMP_real_HW`, `PROD_nom_HW`
@@ -167,7 +167,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 *opis - 2. del: NACE*:
 
 1. zajem podatkov iz evrostata iz tabel `namq_10_a10` (DV), `namq_10_a10_e` (zaposlenost)
-2. izračun agregatov za osem skupin držav (glej poglavje \@ref(Sec:rulcqnace) za detajle) in združitev tabel
+2. izračun agregatov za sedem skupin držav (glej poglavje \@ref(Sec:rulcqnace) za detajle) in združitev tabel
 3. izračun 8 novih spremenljivk (glej poglavje \@ref(Sec:rulcqnace) za detajle)
 4. reorientacija v "long table"
 5. izračun medletnih sprememb in indeksov za 2005, 2007, 2008 in 2019
@@ -175,16 +175,18 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 *spremembe -  2. del: NACE* glede na originalno verzijo.
 
-+ dodani so novi agregati za EU27 in EA20
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
++ geo agregati so samo popolni - če manjkajo podatki za katero od držav, potem tudi agregata ni za tisto obdobje.
++ dodani so novi agregati za in EA20
 + dodan indeks in njegova zglajena verzija še za 2019
 + zaradi konsistentnosti z ostalimi tabelami so ohranjena "originalna"/angleška imena indikatorjev in dodan nov stolpec z njihovimi opisnimi imeni
 + za comprehensiveness in konsistentnost z ostalimi tabelami so dodane naslednje spremenljivke: `COMP_nom_HW`, `COMP_real_HW`, `PROD_nom_HW`
 
-*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 11:00:30
+*posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi ob 11:00:30 na dneve, ko eurostat [release calendar](https://ec.europa.eu/eurostat/news/release-calendar) pravi, da se posodabljajo "Economy and finance GDP and main aggregates/Empl."
 
 
 
-## `05_SURS_RULC_strukt_četrtletno.R`
+## `05_SURS_RULC_strukt_četrtletno.R` {#Sec:skripta5}
 
 *originalna verzija* - cca prvi del `arhiv\3_4_SURS_prod.R` 
 
@@ -197,7 +199,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 *opis*:
 
 1. zajem podatkov iz SiStata iz tabel `0300220S.px` (DV), `0300260S.px` (zaposlenost) in `0300240S.px` (stroški dela)
-2. izračun agregatov za (ne)menjalne in (ne)poslovne sektorje in za BDE in združitev tabel
+2. izračun agregatov za (ne)menjalne in (ne)poslovne idr. sektorje in za BDE in združitev tabel
 3. izračun 23 novih spremenljivk za shift share analizo (glej poglavje \@ref(Sec:sursssvs) za detajle)
 4  zapis v tabelo `SURS_shift_share_cetrtletni`
 5. Izračun 11 novih spremenljivk za RULC (glej poglavje \@ref(Sec:sursrulcskdq) za detajle)
@@ -212,6 +214,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 *spremembe * glede na originalno verzijo.
 
++ agreggati za stalne cene so izračunani iz tekočih in cen prejšnjega leta namesto seštevanja stalnih cen
 + originalna skripta je po novem ločena na dva dela: tale za četrtletne podatke in `06_SURS_RULC_strukt_letno.R` za letne podatke
 + prejšnja tabela TOT_PROD_q ne obstaja več, ker so vsi podatki (samo v dolgi obliki) na voljo v tabeli `SURS_RULC_BDP_total_cetrtletni`
 + prejšnja tabela `RULC_A_q` tudi ne obstaja več, ker za njo ni bilo kode (?), ampak tudi, ker v Access bazi izgleda identična kot `RULC_q`, kar je po novem `SURS_RULC_VA_SKD_cetrtletni`
@@ -222,7 +225,7 @@ V novi skripti so vse tri tabele združene v eni, kar pomeni, da so dekompozicij
 
 *posodabljanje* - avtomatski zagon skripte v Task scheduler-ju na strežniku umar-bi vsak dan ob 10:30:30
 
-## `06_SURS_RULC_strukt_letno.R`
+## `06_SURS_RULC_strukt_letno.R` {#Sec:skripta6} 
 
 *originalna verzija* - cca drugi del `arhiv\3_4_SURS_prod.R` 
 
@@ -305,6 +308,8 @@ V4 & Višegrajske 4 (CZ, HU, SK, PL) \\
 
 
 ## Tabela `produktivnost_makro` {#Sec:pm}
+
+*Skripta*: [01_produktivnost_makro.R](#Sec:skripta1) (poglavje \@ref(Sec:skripta1))
 
 *Prejšnja lokacija tabele*: `podatki_PROD_makro.accdb` tabela `Produktivnost_makro`
 
@@ -406,6 +411,8 @@ Posebna pozornost je potrebna glede naslednjih parov spremenljivk
 
 
 ## Tabela `produktivnost_shift_share` {#Sec:pss}
+
+*Skripta*: \hyperref[Sec:skripta2]{02\_produktivnost\_strukturna.R} (poglavje \@ref(Sec:skripta2))
 
 *Prejšnja lokacija tabel*: `Shift_share(PROD).accdb` tabele `Aggregates`, `Shift_share` in `Shift_share_HW` - ki so zdaj vse združene v eni tabeli
 
@@ -526,6 +533,8 @@ V4 & Višegrajske 4:CZ, HU, SK, PL \\
 
 ## Tabela `RULC_BDP_total_letni` {#Sec:rulcatot}
 
+*Skripta*: [03_RULC_letno.R](#Sec:skripta3) (poglavje \@ref(Sec:skripta3))
+
 *Prejšnja lokacija tabele*: `RULC_letni.accdb` tabela `Total`
 
 
@@ -610,8 +619,9 @@ V spodnji tabeli so prikazane vrednosti spremenljivk Indicator in Descriptor v t
 
 ## Tabela `RULC_VA_NACE_letni` {#Sec:rulcanace}
 
-*Prejšnja lokacija tabele*: `RULC_letni.accdb` tabela `RULC_NACE`
+*Skripta*: [03_RULC_letno.R](#Sec:skripta3) (poglavje \@ref(Sec:skripta3))
 
+*Prejšnja lokacija tabele*: `RULC_letni.accdb` tabela `RULC_NACE`
 
 **nace_r2**: Poleg originalnih 12 NACE klasifikacij, je dodanih še šest naših:
 
@@ -727,14 +737,15 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 
 ## Tabela `RULC_BDP_total_cetrtletni` {#Sec:rulcqtot}
 
-*Prejšnja lokacija tabele*: `RULC_q.accdb` tabela `Q_total`
+*Skripta*: [04_RULC_cetrtletno.R](#Sec:skripta4) (poglavje \@ref(Sec:skripta4))
 
+*Prejšnja lokacija tabele*: `RULC_q.accdb` tabela `Q_total`
 
 **geo**: 
 
 * 28 držav članic
 * štirje originalni agregati iz Eurostata 
-* osem dodatnih agregatov, izračunanih iz podatkov posameznih držav:^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+* sedem dodatnih agregatov, izračunanih iz podatkov posameznih držav:
 
 \begin{table}[H]
 \scriptsize
@@ -752,7 +763,6 @@ EU27\_2020 & EU članice po Brexitu \\
 \midrule
 EU13& nove EU članice po 2004  \\ 
 EU14& stare EU članice po Brexitu \\
-EU27& EU članice po Brexitu - isto kot EU27\_2020, samo se pravilno sešteje \\
 EU27noIE & EU članice po Brexitu  brez Irske \\
 EA20 & območje Evra po pristopu Hrvaške   \\
 EAnoIE & Evro območje brez Irske (po pristopu Hrvaške) \\
@@ -810,14 +820,14 @@ V spodnji tabeli so prikazane vrednosti spremenljivk Indicator in Descriptor v t
 **YOY, Indeks2005, Indeks2007, Indeks2008** za vsako vrenost je izračunana medletna sprememba, ter štirje indeksi z baznimi leti 2005, 2007, 2008 in 2019. 
 
 
-
-
 ## Tabela `RULC_VA_NACE_cetrtletni` {#Sec:rulcqnace}
+
+*Skripta*: [04_RULC_cetrtletno.R](#Sec:skripta4) (poglavje \@ref(Sec:skripta4))
 
 *Prejšnja lokacija tabele*: `RULC_q.accdb` tabela `Q_NACE`
 
 
-**nace_r2**: Poleg originalnih 12 NACE klasifikacij, je dodanih še šest naših:^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+**nace_r2**: Poleg originalnih 12 NACE klasifikacij, je dodanih še šest naših:
 
 \begin{table}[H]
 \scriptsize
@@ -828,7 +838,8 @@ V spodnji tabeli so prikazane vrednosti spremenljivk Indicator in Descriptor v t
 \midrule                                                        
 TOTAL             & Total - all NACE activities         \\                                
 A                 & Agriculture, forestry and fishing     \\                            
-B-E               & Industry (except construction)          \\                          
+B-E               & Industry (except construction)          \\    
+BDE               & Mining, electricity and water supply                  \\
 C                 & Manufacturing                             \\                        
 F                 & Construction                                \\                      
 G-I               & Wholesale and retail trade, transport, accommodation and food ser...\\
@@ -839,15 +850,15 @@ M\_N              & Professional, scientific and technical activities; administr
 O-Q               & Public administration, defence, education, human health and socia...\\
 R-U               & Arts, entertainment and recreation; other service activities; act...\\
  \midrule                                                        
-MENJALNI\_sektor   & A, B-E, G-I, J                                                    \\
-NEMENJALNI\_sektor & F, K, L, M\_N, O-Q, R-U                                            \\
-POSLOVNI\_sektor   & B-E, F, G-I, J, K, M\_N                                            \\
-NEPOSLOVNI\_sektor & A, L, O-Q, R-U                                                    \\
-TRZNE              & G-I, J, K, L, M\_N                                                 \\
-OSTALE             & A, B, D, E, O-Q, R-U \\
+Menjalni   & A, B-E, G-I, J                                                    \\
+Nemenjalni & F, K, L, M\_N, O-Q, R-U                                            \\
+Poslovni   & B-E, F, G-I, J, K, M\_N                                            \\
+Neposlovni & A, L, O-Q, R-U                                                    \\
+Tržni              & G-I, J, K, L, M\_N                                                 \\
+Ostali          & A, BDE, O-Q, R-U \\
 \bottomrule
 \end{tabular}
-\caption{Vrednosti spremenljivk SKD in DEJAVNOST v tabeli \texttt{SURS\_shift\_share\_cetrtletni}}
+\caption{Vrednosti spremenljivk nace\_r2  tabeli \texttt{RULC\_VA\_NACE\_cetrtletni}}
 \label{tab:nace}
 \end{table}
 
@@ -932,12 +943,13 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 
 ## Tabela `SURS_shift_share_cetrtletni` {#Sec:sursssq}
 
+*Skripta*: [05_SURS_RULC_strukt_cetrtletno.R](#Sec:skripta5) (poglavje \@ref(Sec:skripta5))
+
 *Prejšnja lokacija tabele*: `SURS_PROD_RULC.accdb` tabela `prod_q`
 
 **time** datum - prvi dan četrtletja
 
-**SKD** & **DEJAVNOST** na voljo so SKD agregati v spodnji tabeli. Poleg originalnih iz Si-Stata je dodanih še šest dodatnih agregatov.^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
-
+**SKD** & **DEJAVNOST** na voljo so SKD agregati v spodnji tabeli. Poleg originalnih iz Si-Stata je dodanih še šest dodatnih agregatov.
 
 \begin{table}[H]
 \scriptsize
@@ -1018,11 +1030,13 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 
 ## Tabela `SURS_RULC_VA_SKD_cetrtletni ` {#Sec:sursrulcskdq}
 
+*Skripta*: [05_SURS_RULC_strukt_cetrtletno.R](#Sec:skripta5) (poglavje \@ref(Sec:skripta5))
+
 *Prejšnja lokacija tabele*: `SURS_PROD_RULC.accdb` tabela `RULC_q`
 
 **time** datum - prvi dan četrtletja
 
-**SKD** & **DEJAVNOST** na voljo so SKD agregati v spodnji tabeli. Poleg originalnih iz Si-Stata je dodanih še šest dodatnih agregatov.^[Uporaba realnih indikatorjev za te dodatne agregate pomeni seštevanje neaditivnih vrednosti, zato previdno!]
+**SKD** & **DEJAVNOST** na voljo so SKD agregati v spodnji tabeli. Poleg originalnih iz Si-Stata je dodanih še šest dodatnih agregatov.
 
 
 \begin{table}[H]
@@ -1107,6 +1121,8 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 
 ## Tabela `SURS_RULC_BDP_total_cetrtletni  ` {#Sec:sursrucltotq}
 
+*Skripta*: [05_SURS_RULC_strukt_cetrtletno.R](#Sec:skripta5) (poglavje \@ref(Sec:skripta5))
+
 *Prejšnja lokacija tabele*: `SURS_PROD_RULC.accdb` tabela `TOT_RULC_q`
 
 **time** datum - prvi dan četrtletja
@@ -1156,11 +1172,9 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 
 **LETO** & **Q** - letnica in kvartal
 
-
-
-
-
 ## Tabela `SURS_shift_share_letni` {#Sec:sursssa}
+
+*Skripta*: [06_SURS_RULC_strukt_letno.R](#Sec:skripta6) (poglavje \@ref(Sec:skripta6))
 
 *Prejšnja lokacija tabele*: `SURS_PROD_RULC.accdb` tabela `prod_A_det`
 
@@ -1267,6 +1281,8 @@ U &Dejavnost eksteritorialnih organizacij in teles (99) &--- \\
 
 ## Tabela `SURS_RULC_VA_SKD_letni ` {#Sec:sursrulcskda}
 
+*Skripta*: [06_SURS_RULC_strukt_letno.R](#Sec:skripta6) (poglavje \@ref(Sec:skripta6))
+
 *Prejšnja lokacija tabele*: `SURS_PROD_RULC.accdb` tabela `RULC_A`
 
 **LETO** letnica 
@@ -1371,6 +1387,8 @@ Spodaj so prikazane možne vrednosti spremenljivk Indicator in Descriptor v tabe
 
 
 ## Tabela `SURS_RULC_BDP_total_letni  ` {#Sec:sursrucltota}
+
+*Skripta*: [06_SURS_RULC_strukt_letno.R](#Sec:skripta6) (poglavje \@ref(Sec:skripta6))
 
 *Prejšnja lokacija tabele*: `SURS_PROD_RULC.accdb` tabela `TOT_RULC_A`
 

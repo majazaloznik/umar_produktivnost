@@ -327,7 +327,7 @@ Anyway, iz MNAC izračunani CLV so vsi pravilni, 0.00% errorja v primerjavi z ob
 
 OK, države z Eurom, recimo Finska:
 + CP so isti od leta prevzema naprej (1999)
-+ PYO si isti od enega leta kasneje (2000)
++ PYP si isti od enega leta kasneje (2000)
 + CLV so isti za celo obdobje ?
 + CLV izračunan iz MEUR je pravilen od leta prevzema naprej 1999
 + CLV iz MNAC izračunan je pravilen za celo obdobje. 
@@ -351,7 +351,7 @@ Zdej imam še annual funkcijo za CLV-je. Dela super. Zdaj je vprašanje, ali spl
 
 # 30.7.24
 
-ugh. agregiranje pomeni, da je treba najprej seštet mnac-je, in za to jih moraš najprej konvertirat v meur. se pravi rabim xrates in za cp in za pyp. 
+ugh. agregiranje na geo pomeni, da je treba najprej seštet mnac-je, in za to jih moraš najprej konvertirat v meur. se pravi rabim xrates in za cp in za pyp. 
 
 
 OK, se pravi takole mora it proces: imamo dve dimenziji agregiranja, po SKD-jih in po geografijah. Kazalnike imamo navadne, npr. PPS ali zaposlenost, in pa nenavadne, kot je CLV. Navadne se enostavno sešteva, ampak CLV-jev pa ne seštevaš. Za njih moraš najprej sešteti MNAC vrednosti. In če agregiraš geografije, jih moraš najprej xrate-at preden jih lahko seštevaš. Potem, ko so sešteti, pa lahko izračunaš CLV. Za aggregate SKD je torej OK, da se enostavno seštejejo vsi kazalniki. za aggregate geo pa je treba xrate. potem, ko je vse agregiranje narejeno pa pride chain linking. 
@@ -431,9 +431,101 @@ OK, grem iz serverja pognat in zdej ene četrtletne ne delajo, wtf. sej to je ž
 
 ah, sploh ni blo to, ampak da sem prekinla povezavo z bazo in potem zadnji del skripte ni delal, ker mora pogledat koliko je vrstic v bazi. popravljeno zdej mensezdi. 
 
+OK, gremo zdej četrtletja. Al najprej helper functions malo popucam in dopišem dokumentacijo tam not, da bo bolj clean. OK, narejeno.
+
+OK, aggregate_geo_annual v bistvu dela tudi za četrtletne podatke, tako da sem popravila ime funkcije povsod. Gremo zdej CLV pogledat.. 
+
+OK, neki je treba s tem grupiranjem narest, da je agnostično na to kaj pride not se mi zdi. ampak dost za dons..
+
+# 13.8.24
+
+Mogoče bi blo smart pogledat kaka je situacija pri drugih tabelah, da ne bom pol vsakič popravljala. 
+
+OK, se pravi 
+
+RULC_BDP_totals_Q - samo geo agregiranje
++ BDP ima NSA in SCA verziji
++ ampak po na_item imamo še D1, ki nima PYP-ja.
+
+Aja, MNAC sem pozabla. Shit, kako že to deluje. Za skd agregacije, se pravi znotraj države, smo vidli, da moraš uporabljat MNAC, da dobiš ta prav CLV. CLV potem z 2010 xrate pretvoriš v CLV MEUR. 
+
+Zdej, ker lahko spraviš xrate-s (dva seta sta, en za CP četrtletni in en letni za PYP), potem lahko tudi MEUR uporabljaš in pretvoriš v MNAC, da izračunaš CLV, in ga potem pretvoriš nazaj v CLV MEUR. 
+
+Ampak vprašanje je kako delat agregacije za geo. Ker MNAC ne moreš seštevati seveda, ker so različne valute. Po moje moram v Excelu sprobat. Hm, problem je, da se CP MEUR in PYP MEUR ne seštejejo prav recimo za EU15. Razlike so do 0.12%, kar sicer ni velik. Ampak 
+
+# 14.8.24
+
+kurba, zdej vidim, da v enih tabelah na bazi ne delajo čšžji. Samo v drugih pa delajo, wtf? v 02 je narobe in 03 in 04 tudi. v o6 in 05 pa očitno prav. Mhm, source rabi `source("R/00_skd_lookup.R", encoding = "UTF-8")`, pol je ok tud na serverju, kjer je drgač default locale 1250.. OK, rešeno.
+
+Gremo naprej/nazaj na četrtletne agregacije. 
+
+OK, se pravi mamo zdej problem. in to je, da so skd agregacije pravilne z MNAC in ne MEUR. Ampak geo agregacij pa ne morem delat z MNAC seveda. Se pravi geo agregacije morajo biti iz MEUR. Poleg tega geo agregacije za CP meur in PYP meur se sploh ne seštejejo pravilno. A naredim en excel primer in jim pišem zakaj ne? Ma ja, sej to sem jim že pisala, lol. Skratka i guess se sprijaznim s tem, da geo agr so itak na prbližn, sploh če je bil kak update za posamezno državo vmes, kar pa je ful zajeban vedet al se je zgodil al ne. Res bi morala vintage shranjevat za te serije. To je naslednja stvar, dodat te eurostatove podatke na bazo... 
+
+Ampak OK, se pravi agregiranje po dveh dimenzijah. 
+
+# 21.8.24
+
+ok, se pravi asociativnost in komutativnost pomenita, da je vseen vrstni red agregiranja. Ampak za četrtletja vemo, da je MNAC pravilen za sektorske agregacije. ki jih moram potem v MEUR prestavit. Potem pa geo agregacije, ki ne morejo biti perfektne, ampak so najboljše kar lahko naredimo. Se mi zdi. Gremo probat. 
+
+OK, ampak 04 ima v prvem delu samo geo agregiranje, tako da dejmo to najprej probat i guess. OK, chainlinking za četrtletja zgleda OK, sem probala na sloveniji na hitro in od leta 2006 naprej so napake pod 0.2 milijona oz. 0.00% clean. Pa to je z MEUR, moralo bi bit z MNAC, tko da tko to zdej je.  
+
+OK, ampak kaj narediš kadar ni podatkov za PYP za prvo leto. Takrat vzamemo CP podatke pač...
+
+OK, še en problem: zadnji kvartal. kaj narest, ko ni za vse države podatkov. in dodatna čudna zadeva: kako imajo lahko objavljene podatke za CLV ne pa za CP. recimo EE za Q2 2024. Aha, to je "estimated", čeprav je glupo, da estimateajo samo CLV ne pa tud ostalih.. Hm, get_eurostat ne pusti keep flags opcije, če so filtri. tako da bi morala bulk downloadat vse, če bi hotela obdržat tudi filtre. 
+
+Glede agregiranja z manjkajočimi mogoče pa ne brišem NA-jev, pa bo agregacija pustila NA. 
+
+OK, agregacije za geo delajo ok zdej, samo preveč NA-jev not ostane, to je treba popucat jutri... 
+
+# 22.8.24
+
+Jesus, ok, tuki je neki ful narobe.. bdp za agregirane geo je čist off, indeksi padajo dramatično, wtaf.. Aja, ponesreč sem annual namesto quarterly funkcijo dala, vse je OK, phew.
+
+OK, zdej pa še tole: zakaj ni SCA EU13 podatkov? Aha, ker manjka Malta. V bistvu zato tudi ni podatkov za Eu13 do leta 2000, ker manjka Malta. Prej nismo teh NAjev upošteval in se je seštelo ne glede na to al so bli podatki za vse države al ne. Zdej sem to dala stran, kar mislim, da je edino pravilno, tud če to pomeni, da ene serije ne obstajajo al pa so krajše. 
+
+Zdej recimo Malta nima PYP podatkov desezoniranih sploh. So pa podatki za CLV. Samo kaj naj s tem, ne moremo pri enih serijah prištevat zraven CLV-jev, pri drugih pa ne. Pač ne bo podatka. 
+
+OK, ampak zdej pri EU14 nimam serije, ker italija nima CLV-ja za 1995. in jaz sem dala za pogoj, če ni PYP-ja ampak je CLV, da se uporabi CP. Ampak tega ne smem očitno, ker je lahko brez CLV-ja. al pa moram začeti serijo šele tam, kjer je CLV? Ker eurostat ima serije od 95 naprej tudi za EU27 ali 28, kjer je Italija not. OK, popravila. 
+
+Še vedno ni SCA serije, zato ker PYP ni objavljen za SCA, čeprav CLV pa je, kar je čudno. Aja, verjetno desezoniraš CLV direktno. 
+
+OK, gremo tele države, ki manjkajo popravit še v letnih podatkih verjetno, a ne?
+
+Aja, najprej dejmo še to: če za eno celo serijo ni podatkov, se pravi celotno obdobje so NA, jih vržemo ven, a prav? Mogoče ne, al pa bom Rotijo vprašala. 
+
+OK, geo agregiranje za četrtletja dela OK. Gremo SKD-je pol gledat? Za to rabim MNAC-e. 
+
+# 23.8.
+
+prva runda četrtletij zgleda da daela. 
+
+# 26.8.2024
+
+popravek na 05 sursu, kjer je bil s stroški dela narejen nepopolen merge, ker so bila imena dejavnosti narobe. opazila Rotija, da manjkajo comp podatki za originalne dejavnost. zdej ok. 
 
 
+OK, 04 zgleda ok, gremo na 05. 
 
+OK, mislim, da je 05 tud ok, preverim jutri in dokumentacijo porihtam.
+
+# 27.8.24
+
+OK, odokativno vse 05 tabele zgledaj OK. Gremo še preverit zares 04 in 05. V iz štirke ima razlike pričakovane edino EA20 ima ful razlik tudi na kazalnikih, ki jih ne bi smel imet, kako je do tega prišlo pojma nimam. Aha, ker sem imela napako tam, lol, vse kul zdej. 
+
+OK, vse zgleda kul. Gremo še dokumentacijo in to je to. Aja, commit prejšnje verzije in potem nove .
+
+
+Poglej pol še za ostale skripte, če so geo agregati vedno popolni!
+
+Aha, manjka mi BDE pri štirki, zato so Ostali narobe, kako sem to spregledala pitaj boga. OK, še to. 
+OK, mislim, da je OK.
+
+Dej še polinkaj skripte na tabele v dokumentaciji. OK. In dokumentacija je ready po moje. Samo nikjer ni razloženo, da je MNAC uporabljen pri eurostat četrtletnih agregacijah. OK, vsaj tukaj je zaenkrat. 
+
+Grem pogledat še geo agregacije pri letnih, če so OK. Ja, ni na.rm je true, tako da ma da je OK. 
+
+
+Dobro, to je zdej na produkciji, uradno otvorjeno. Upam, da dela vse ok, bomo vidli sprot. za zdej imam dost.
 
 
 

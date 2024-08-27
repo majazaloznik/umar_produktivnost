@@ -67,6 +67,15 @@ sectors_surs_det <- list(
   `Predelovalni neenergetski` = c("10", "11", "12", "13", "14", "15", "16", "18",
                            "19", "21", "22", "25", "26",
                            "27", "28", "29", "30", "31", "32", "33"))
+# sektorski agregati za SURS - navadni
+sectors_surs <- list(
+  Menjalni = c("A", "BCDE", "GHI" , "J" ),
+  Nemenjalni = c("F" , "K" ,  "L" , "MN", "OPQ", "RST"),
+  Poslovni = c( "BCDE" , "F" ,  "GHI", "J" , "K", "MN" ),
+  Neposlovni = c("A" , "L" , "OPQ", "RST"),
+  Tržni = c("GHI", "J", "K", "L", "MN"),
+  Ostali = c( "A", "BDE", "OPQ", "RST"))
+
 
 new_aggregations <- data.frame(
   nace_r2 = names(sectors_eurostat_a64),
@@ -178,35 +187,16 @@ indicator_descriptions <- c(
   "deflator_VA" = "deflator DV",
   "deflator_GDP" = "deflator BDP")
 
-MENJALNI_sektor <- c("A" , "B-E",  "G-I", "J")
-NEMENJALNI_sektor <- c("F" , "K" ,  "L" , "M_N", "O-Q", "R-U")
-POSLOVNI_sektor <- c("B-E", "F" ,"G-I", "J", "K", "M_N")
-NEPOSLOVNI_sektor <- c("A" , "L" , "O-Q", "R-U")
-HIGH_TECH_MANUF <- c("C21" , "C26")
-MED_HIGH_TECH_MANUF <- c("C20" , "C27", "C28", "C29_C30")
-MED_LOW_TECH_MANUF <- c("C19", "C22_C23", "C24_C25")
-LOW_TECH_MANUF <- c("C10-C12",  "C13-C15", "C16-C18", "C31-C32")
-KNOWLEDGE_MKT_SERV <- c("J",  "M")
-REST_MKT_SERV <- c("G-I", "K", "N")
-TRZNE <- c("G-I", "J", "K", "L", "M_N")
-OSTALE <- c( "A", "B", "D", "E", "O-Q", "R-U")
-MENJALNI_sektor_surs <- c("A", "BCDE", "GHI" , "J" )
-NEMENJALNI_sektor_surs <- c("F" , "K" ,  "L" , "MN", "OPQ", "RST")
-POSLOVNI_sektor_surs <- c( "BCDE" , "F" ,  "GHI", "J" , "K", "MN" )
-NEPOSLOVNI_sektor_surs <- c("A" , "L" , "OPQ", "RST")
-TRZNE_surs <- c("GHI", "J", "K", "L", "MN")
-OSTALE_surs <- c( "A", "BDE", "OPQ", "RST")
-sectors <- list(
-  MENJALNI_sektor = MENJALNI_sektor,
-  NEMENJALNI_sektor = NEMENJALNI_sektor,
-  POSLOVNI_sektor = POSLOVNI_sektor,
-  NEPOSLOVNI_sektor = NEPOSLOVNI_sektor,
-  HIGH_TECH_MANUF = HIGH_TECH_MANUF,
-  MED_HIGH_TECH_MANUF = MED_HIGH_TECH_MANUF,
-  MED_LOW_TECH_MANUF = MED_LOW_TECH_MANUF,
-  LOW_TECH_MANUF = LOW_TECH_MANUF,
-  KNOWLEDGE_MKT_SERV = KNOWLEDGE_MKT_SERV,
-  REST_MKT_SERV = REST_MKT_SERV,
-  TRZNE = TRZNE,
-  OSTALE = OSTALE
-)
+xrates_2010 <- eurostat::get_eurostat("namq_10_a10",
+                                     filters = list(
+                                       geo = geo_subset,
+                                       time = c("2010-Q1", "2010-Q2", "2010-Q3", "2010-Q4"),
+                                       s_adj = "NSA",
+                                       na_item = "B1G", # Value added, gross
+                                       unit = c("CLV10_MEUR", "CLV10_MNAC"),
+                                       nace_r2 = "TOTAL")) |>
+  select(-s_adj, -na_item, -freq, -nace_r2) |>
+  pivot_wider(names_from = unit, values_from = values) |>
+  mutate(xrate = CLV10_MNAC / CLV10_MEUR) |>
+  group_by(geo) |>
+  summarise(xrate = mean(xrate))

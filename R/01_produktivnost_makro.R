@@ -70,17 +70,17 @@ GDP_agr <- GDP |>
 # agregiranje za EMP
 EMP_agr <- EMP |>
   bind_rows(lapply(names(geo_aggregations), function(label) {
-    aggregate_geo_annual(EMP, geo_aggregations[[label]], label)}))
+    aggregate_geo(EMP, geo_aggregations[[label]], label)}))
 
 # agregiranje za POP
 POP_agr <- POP |>
   bind_rows(lapply(names(geo_aggregations), function(label) {
-    aggregate_geo_annual(POP, geo_aggregations[[label]], label)}))
+    aggregate_geo(POP, geo_aggregations[[label]], label)}))
 
 # agregiranje za POP2
 POP2_agr <- POP2 |>
   bind_rows(lapply(names(geo_aggregations), function(label) {
-    aggregate_geo_annual(POP2, geo_aggregations[[label]], label)}))
+    aggregate_geo(POP2, geo_aggregations[[label]], label)}))
 
 ####  Združitev tabel   ########################################################
 master_agr <- bind_rows(GDP_agr, EMP_agr, POP_agr, POP2_agr)

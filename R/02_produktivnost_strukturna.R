@@ -8,7 +8,7 @@ library(dplyr)
 library(tidyr)
 ####   setup    ################################################################
 source("R/00_geo_lookup.R") # geografije
-source("R/00_skd_lookup.R") # skd klasifikaicje
+source("R/00_skd_lookup.R", encoding = "UTF-8") # skd klasifikaicje
 source("R/helper_functions.R")
 
 ################################################################################
@@ -43,7 +43,7 @@ VA_agr_geo <- VA |>
 # agregiranje za EMP
 EMP_agr_geo <- EMP |>
   bind_rows(lapply(names(geo_aggregations), function(label) {
-    aggregate_geo_annual(EMP, geo_aggregations[[label]], label)}))
+    aggregate_geo(EMP, geo_aggregations[[label]], label)}))
 
 ################################################################################
 #                         Definiranje dodatnih SKD agregatov                   #
@@ -56,7 +56,7 @@ VA_agr_geo_skd <- VA_agr_geo |>
 # agregiranje za EMP
 EMP_agr_geo_skd <- EMP_agr_geo |>
   bind_rows(lapply(names(sectors_eurostat_a64), function(label) {
-    aggregate_skd_annual(EMP_agr_geo, sectors_eurostat_a64[[label]], label)}))
+    aggregate_skd(EMP_agr_geo, sectors_eurostat_a64[[label]], label)}))
 
 ####  Združitev tabel   ########################################################
 master_agr <- bind_rows(VA_agr_geo_skd, EMP_agr_geo_skd) |>

@@ -2,7 +2,6 @@
 #               KVARTALNI PODATKI, PO SKD                                      #
 #         revizija MZ Junij 2024, original Katarina                            #
 ################################################################################
-
 ####   Knjižnjice   ############################################################
 library(tidyr)
 library(pxR)
@@ -12,8 +11,7 @@ library(zoo)
 ####   setup    ################################################################
 source("R/00_geo_lookup.R") # geografije
 source("R/00_skd_lookup.R", encoding = "UTF-8")
-
-
+source("R/helper_functions.R")
 
 ################################################################################
 #                 Download Četrtletnih Podatkov                                #
@@ -23,25 +21,30 @@ url_2 <-"https://pxweb.stat.si/SiStatData/Resources/PX/Databases/Data/0300260S.p
 url_3 <-"https://pxweb.stat.si/SiStatData/Resources/PX/Databases/Data/0300240S.px"
 
 bulk_DV <- as.data.frame(read.px(url_1, encoding = "cp1250",
-                   na.strings = c('"."', '".."', '"..."', '"...."')))
+                                 na.strings = c('"."', '".."', '"..."', '"...."')))
 bulk_zap <- as.data.frame(read.px(url_2, encoding = "cp1250",
-                    na.strings = c('"."', '".."', '"..."', '"...."')))
+                                  na.strings = c('"."', '".."', '"..."', '"...."')))
 bulk_stroski <- as.data.frame(read.px(url_3, encoding = "cp1250",
-                        na.strings = c('"."', '".."', '"..."', '"...."')))
+                                      na.strings = c('"."', '".."', '"..."', '"...."')))
 
 ################################################################################
 #       filtriranje, SKD rekodiranja in pivot wider                            #
 ################################################################################
 DV <- bulk_DV |>
   filter(VRSTA.PODATKA == "Originalni podatki" &
-           MERITVE %in% c("Stalne cene, referenčno leto 2010 (mio EUR)", "Tekoče cene (mio EUR)")&
+           MERITVE %in% c("Stalne cene, referenčno leto 2010 (mio EUR)",
+                          "Tekoče cene (mio EUR)",  "Stalne cene predhodnega leta (mio EUR)")&
            !TRANSAKCIJE %in% c("Neto davki na proizvode", "Bruto domači proizvod")) |>
   mutate(across(where(is.factor), as.character)) |>
   select(-VRSTA.PODATKA) |>
-  rename(DEJAVNOST = TRANSAKCIJE) |>
-  mutate(SKD = recode(DEJAVNOST, !!!dejanvost_lookup, .default = NA_character_),
-         DEJAVNOST = ifelse(SKD == "SKUPAJ", "Dejavnost - SKUPAJ", DEJAVNOST)) |>
-  pivot_wider(names_from = MERITVE)
+  rename(DEJAVNOST = TRANSAKCIJE, time = ČETRTLETJE, values = value) |>
+  mutate(nace_r2 = recode(DEJAVNOST, !!!dejanvost_lookup, .default = NA_character_),
+         DEJAVNOST = ifelse(nace_r2 == "SKUPAJ", "Dejavnost - SKUPAJ", DEJAVNOST),
+         unit = case_when(
+           MERITVE ==  "Tekoče cene (mio EUR)" ~ "CP_MEUR",
+           MERITVE == "Stalne cene predhodnega leta (mio EUR)" ~ "PYP_MEUR",
+           MERITVE == "Stalne cene, referenčno leto 2010 (mio EUR)" ~ "CLV10_MEUR"),
+         time = as.Date(as.yearqtr(time, format = "%YQ%q")), .keep = "unused")
 
 zap <- bulk_zap |>
   filter(VRSTA.PODATKA=="Originalni podatki" &
@@ -49,19 +52,24 @@ zap <- bulk_zap |>
            !DEJAVNOST.SEKTOR %in% c("..S.15 NPISG","..S.14 Gospodinjstva", "..S.13 Država","..S.11 Nefinančne družbe","..S.12 Finančne družbe")) |>
   mutate(across(where(is.factor), as.character)) |>
   select(-VRSTA.PODATKA) |>
-  rename(DEJAVNOST = DEJAVNOST.SEKTOR) |>
-  mutate(SKD = recode(DEJAVNOST, !!!dejanvost_lookup, .default = NA_character_)) |>
-  pivot_wider(names_from = c(MERITVE, VRSTA.ZAPOSLENOSTI))
+  rename(DEJAVNOST = DEJAVNOST.SEKTOR, time = ČETRTLETJE) |>
+  mutate(nace_r2 = recode(DEJAVNOST, !!!dejanvost_lookup, .default = NA_character_),
+         time = as.Date(as.yearqtr(time, format = "%YQ%q"))) |>
+  pivot_wider(names_from = c(MERITVE, VRSTA.ZAPOSLENOSTI), values_from = value) |>
+  dplyr::rename_with(~ c( "EMP_PER","EMP_HW", "SAL_PER", "SAL_HW" ), .cols = 4:7) |>
+  pivot_longer(4:7, values_to = "values", names_to = "unit")
 
 stroski <- bulk_stroski |>
   filter(VRSTA.PODATKA == "Originalni podatki") |>
   filter(str_detect(TRANSAKCIJE, regex("Sredstva za zaposlene", ignore_case = TRUE))) |>
-  rename(DEJAVNOST = TRANSAKCIJE) |>
+  rename(DEJAVNOST = TRANSAKCIJE,time = ČETRTLETJE, values = value) |>
   select(-VRSTA.PODATKA) |>
-  mutate(across(where(is.factor), as.character)) |>
-  mutate(SKD = recode(DEJAVNOST, !!!transakcije_lookup, .default = NA_character_)) |>
-  mutate(DEJAVNOST = recode( SKD, !!!setNames(names(dejanvost_lookup), dejanvost_lookup),
-         .default = NA_character_))
+  mutate(across(where(is.factor), as.character),
+         unit = "COMP_nom",
+         time = as.Date(as.yearqtr(time, format = "%YQ%q")),
+         nace_r2 = recode(DEJAVNOST, !!!transakcije_lookup, .default = NA_character_),
+         DEJAVNOST = recode( nace_r2, !!!setNames(names(dejanvost_lookup), dejanvost_lookup),
+                             .default = NA_character_))
 
 tot_BDP <- bulk_DV |>
   mutate(across(where(is.factor), as.character)) |>
@@ -96,70 +104,45 @@ tot_stroski <- bulk_stroski |>
 ################################################################################
 #                         Definiranje dodatnih SKD agregatov                   #
 ################################################################################
-# funkcija za agregiranje
-aggregate_skd <- function(df, group, group_name) {
- x <-  df  |>
-    filter(SKD %in% group) |>
-    group_by(ČETRTLETJE) |>
-    summarise(across(where(is.numeric), \(x) sum(x, na.rm = TRUE)),
-              SKD = group_name, DEJAVNOST = paste(group, collapse = ", ")) |>
-    bind_rows(df)
-}
-# funkcija za BDE
-calculate_c <- function(df) {
-  x <- df  |>
-    filter(SKD %in% c("BCDE", "C")) |>
-    select(-DEJAVNOST) |>
-    group_by(ČETRTLETJE) |>
-    pivot_wider(names_from = SKD, values_from = where(is.numeric)) |>
-    mutate(across(ends_with("BCDE"),
-                  .fns = ~ . - get(gsub("BCDE$", "C", cur_column())),
-                  .names = "BDE_{.col}")) |>
-    ungroup() |>
-    select(ČETRTLETJE, starts_with("BDE_")) |>
-    rename_with(~ gsub("BDE_", "", .), starts_with("BDE_")) |>
-    rename_with(~ gsub("_BCDE", "", .), ends_with("_BCDE")) |>
-    rename_with(~ if_else(. %in% "BCDE", "value", .), .cols = everything()) |>
-    mutate(SKD = "BDE",
-      DEJAVNOST = "Rudarstvo, oskrba z elektriko in vodo, ravnanje z odplakami, saniranje okolja") |>
-    bind_rows(df) |>
-    mutate(time = as.Date(as.yearqtr(ČETRTLETJE, format = "%YQ%q")),.keep = "unused") |>
-    relocate(time, SKD, DEJAVNOST)
-}
+# disagregiranje BCDE v BDE
+DV_w_BDE <-  DV |>
+  bind_rows(disagregate_bde_and_calculate_clv_surs_quarterly(DV))
+zap_w_BDE <- zap |>
+  bind_rows(disagregate_bde_surs(zap))
+stroski_w_BDE <- stroski |>
+  bind_rows(disagregate_bde_surs(stroski))
 
-DV_agr <- aggregate_skd(DV, POSLOVNI_sektor_surs, "Poslovni")
-DV_agr <- aggregate_skd(DV_agr, NEPOSLOVNI_sektor_surs, "Neposlovni")
-DV_agr <- aggregate_skd(DV_agr, MENJALNI_sektor_surs, "Menjalni")
-DV_agr <- aggregate_skd(DV_agr, NEMENJALNI_sektor_surs, "Nemenjalni")
-DV_agr <- aggregate_skd(DV_agr, TRZNE_surs, "Tržne")
-DV_agr <- aggregate_skd(DV_agr, OSTALE_surs, "Ostale")
-DV_agr <- calculate_c(DV_agr)
+# agregiranje za VA in preračun CLV-jev
+DV_skd_agr <- DV_w_BDE |>
+  bind_rows(lapply(names(sectors_surs), function(label) {
+    aggregate_skd_and_calculate_clv_quarterly(DV_w_BDE, sectors_surs[[label]], label)})) |>
+  mutate(DEJAVNOST = if_else(is.na(DEJAVNOST),
+                             sapply(nace_r2, function(x) paste(sectors_surs[[x]], collapse = ", ")),
+                             DEJAVNOST)) |>
+  filter(unit != "PYP_MEUR")
 
+# agregiranje za zaposlenost
+zap_skd_agr <- zap_w_BDE |>
+  bind_rows(lapply(names(sectors_surs), function(label) {
+    aggregate_skd(zap_w_BDE, sectors_surs[[label]], label)})) |>
+  mutate(DEJAVNOST = if_else(is.na(DEJAVNOST),
+                             sapply(nace_r2, function(x) paste(sectors_surs[[x]], collapse = ", ")),
+                             DEJAVNOST))
 
-zap_agr <- aggregate_skd(zap, POSLOVNI_sektor_surs, "Poslovni")
-zap_agr <- aggregate_skd(zap_agr, NEPOSLOVNI_sektor_surs, "Neposlovni")
-zap_agr <- aggregate_skd(zap_agr, MENJALNI_sektor_surs, "Menjalni")
-zap_agr <- aggregate_skd(zap_agr, NEMENJALNI_sektor_surs, "Nemenjalni")
-zap_agr <- aggregate_skd(zap_agr, TRZNE_surs, "Tržne")
-zap_agr <- aggregate_skd(zap_agr, OSTALE_surs, "Ostale")
-zap_agr <- calculate_c(zap_agr)
-
-stroski_agr <- aggregate_skd(stroski, POSLOVNI_sektor_surs, "Poslovni")
-stroski_agr <- aggregate_skd(stroski_agr, NEPOSLOVNI_sektor_surs, "Neposlovni")
-stroski_agr <- aggregate_skd(stroski_agr, MENJALNI_sektor_surs, "Menjalni")
-stroski_agr <- aggregate_skd(stroski_agr, NEMENJALNI_sektor_surs, "Nemenjalni")
-stroski_agr <- aggregate_skd(stroski_agr, TRZNE_surs, "Tržne")
-stroski_agr <- aggregate_skd(stroski_agr, OSTALE_surs, "Ostale")
-stroski_agr <- calculate_c(stroski_agr) |> rename(COMP_nom = value)
+# agregiranje za stroške
+stroski_skd_agr <- stroski_w_BDE |>
+  bind_rows(lapply(names(sectors_surs), function(label) {
+    aggregate_skd(stroski_w_BDE, sectors_surs[[label]], label)})) |>
+  mutate(DEJAVNOST = if_else(is.na(DEJAVNOST),
+                             sapply(nace_r2, function(x) paste(sectors_surs[[x]], collapse = ", ")),
+                             DEJAVNOST))
 
 # Združitev baz
-PROD_q <- DV_agr |>
-  left_join(zap_agr) |>
-  rename_with(~ c("VA_nom", "VA_real", "EMP_PER","EMP_HW", "SAL_PER", "SAL_HW" ),
-              .cols = 4:9)
+PROD_q <- DV_skd_agr |>
+  bind_rows(zap_skd_agr)
 
 RULC_q <- PROD_q |>
-  left_join(stroski_agr)
+  bind_rows(stroski_skd_agr)
 
 # združitev baz total
 tot_RULC_q <- tot_BDP |>
@@ -173,6 +156,9 @@ tot_RULC_q <- tot_BDP |>
 #                       Preračuni  za shift share                              #
 ################################################################################
 SURS_shift_share_cetrtletni <- PROD_q |>
+  rename(SKD = nace_r2 ) |>
+  pivot_wider(names_from = unit, values_from = values) |>
+  rename(VA_nom = CP_MEUR, VA_real = CLV10_MEUR) |>
   select(-SAL_PER, -SAL_HW) |>
   dplyr::group_by(time) |>
   dplyr::mutate(EMP_share = EMP_PER / EMP_PER[DEJAVNOST == "Dejavnost - SKUPAJ"] * 100) |>
@@ -210,7 +196,7 @@ SURS_shift_share_cetrtletni <- PROD_q |>
 # Database connection details
 con <- DBI::dbConnect(RPostgres::Postgres(),
                       dbname = "produktivnost",
-                      host = "localhost",
+                      host = "localhost", #"192.168.38.21"
                       port = 5432,
                       user = "postgres",
                       password = Sys.getenv("PG_PG_PSW"))
@@ -225,6 +211,9 @@ DBI::dbWriteTable(con, "SURS_shift_share_cetrtletni", SURS_shift_share_cetrtletn
 #                       Preračuni  za RULC                                     #
 ################################################################################
 SURS_RULC_VA_SKD_cetrtletni <- RULC_q |>
+  rename(SKD = nace_r2 ) |>
+  pivot_wider(names_from = unit, values_from = values) |>
+  rename(VA_nom = CP_MEUR, VA_real = CLV10_MEUR) |>
   mutate(deflator_VA = VA_nom / VA_real,
          COMP_nom_EMP = COMP_nom / SAL_PER,
          COMP_real_EMP = (COMP_nom / deflator_VA) / SAL_PER,

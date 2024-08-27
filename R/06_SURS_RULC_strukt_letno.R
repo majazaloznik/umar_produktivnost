@@ -10,6 +10,7 @@ library(dplyr)
 library(lubridate)
 library(zoo)
 ####   setup    ################################################################
+source("R/00_geo_lookup.R") # geografije
 source("R/00_skd_lookup.R", encoding = "UTF-8")# skd klasifikaicje
 source("R/helper_functions.R")
 ################################################################################
@@ -131,7 +132,7 @@ DV_A_agr <- DV_A |>
 
 zap_A_agr <- zap_A |>
   bind_rows(lapply(names(sectors_surs_det), function(label) {
-    aggregate_skd_annual(zap_A, sectors_surs_det[[label]], label)})) |>
+    aggregate_skd(zap_A, sectors_surs_det[[label]], label)})) |>
   mutate(DEJAVNOST = if_else(is.na(DEJAVNOST),
                              sapply(nace_r2, function(x) paste(sectors_surs_det[[x]], collapse = ", ")),
                              DEJAVNOST),
@@ -139,7 +140,7 @@ zap_A_agr <- zap_A |>
 
 stroski_A_agr <- stroski_A |>
   bind_rows(lapply(names(sectors_surs_det), function(label) {
-    aggregate_skd_annual(stroski_A, sectors_surs_det[[label]], label)})) |>
+    aggregate_skd(stroski_A, sectors_surs_det[[label]], label)})) |>
   mutate(DEJAVNOST = if_else(is.na(DEJAVNOST),
                              sapply(nace_r2, function(x) paste(sectors_surs_det[[x]], collapse = ", ")),
                              DEJAVNOST),
