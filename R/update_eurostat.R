@@ -16,7 +16,8 @@ gm_auth(email = TRUE, cache = ".secret")
 email_list <- c("maja.zaloznik@gmail.com",
                 "maja.zaloznik@gov.si",
                 "Rotija.Kmet-Zupancic@gov.si",
-                "urska.cede@gov.si")
+                "urska.cede@gov.si",
+                "peter_wostner@gov.si")
 source("R/helper_functions.R")
 
 ###############################################################################

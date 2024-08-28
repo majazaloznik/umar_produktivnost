@@ -1445,7 +1445,24 @@ Vse tabele se nahajajo znotraj sheme `produktivnost` (najvišja strukturna raven
 
 **Dostop do baze je mogoč samo z uporabniškim imenom in geslom, ki ga lahko dodeli administrator Postgres strežnika (trenutno mz).**
 
+Na bazi se doda novega uporabnika takole:
+```
+select current_database();
+CREATE USER peter_wostner WITH PASSWORD 'xxx';
+
+-- Grant usage on the schema
+GRANT USAGE ON SCHEMA produktivnost TO peter_wostner;
+
+-- Grant select on all current tables in the schema
+GRANT SELECT ON ALL TABLES IN SCHEMA produktivnost TO peter_wostner;
+
+-- Ensure future tables inherit these permissions
+ALTER DEFAULT PRIVILEGES IN SCHEMA produktivnost GRANT SELECT ON TABLES TO peter_wostner;
+```
+
 Poleg dodajanja novih uporabnikov z `USAGE` in `SELECT` pravicami na bazi, je za vsakega uporabnika potrebno tudi v `pg_hba.conf` dodati njihove IP-je (službenega in domačega), da jim steržnik dovoli povezavo. 
+
+In dotičnega uporabnika dodaš tudi v `umar_produktivnost/R/update_eurostat.R` in `update_surs.R` pod email list, da dobi email kadarkoli se posodobijio podatki. 
 
 ### Excel Data Connection / Power Query
 
