@@ -437,4 +437,47 @@ CREATE TABLE "SURS_RULC_BDP_total_letni" (
 # Execute the table creation command
 dbExecute(con, create_table_sql)
 
+#### SURS letna produktivnost_shift_share  ################################
+# table deletion command
+drop_table_sql <- "DROP TABLE IF EXISTS \"SURS_shift_share_letni_teoretsko_prav\";"
+dbExecute(con, drop_table_sql)
+
+# table creation
+create_table_sql <- '
+CREATE TABLE "SURS_shift_share_letni_teoretsko_prav" (
+  "LETO" INTEGER,
+  "SKD" VARCHAR,
+  "DEJAVNOST" VARCHAR,
+  aggr VARCHAR,
+  "VA_nom" DOUBLE PRECISION,
+  "VA_real" DOUBLE PRECISION,
+  "EMP_HW" DOUBLE PRECISION,
+  "EMP_PER" DOUBLE PRECISION,
+  "EMP_share" DOUBLE PRECISION,
+  "HW_share" DOUBLE PRECISION,
+  "VA_share_nom" DOUBLE PRECISION,
+  "VA_share_real" DOUBLE PRECISION,
+  "PROD_real_EMP" DOUBLE PRECISION,
+  "PROD_real_HW" DOUBLE PRECISION,
+  "PROD_nom_EMP" DOUBLE PRECISION,
+  "PROD_nom_HW" DOUBLE PRECISION,
+  "PROD_yoy_EMP" DOUBLE PRECISION,
+  "PROD_diff_EMP" DOUBLE PRECISION,
+  "EMP_share_diff" DOUBLE PRECISION,
+  "WITHIN_effect_EMP" DOUBLE PRECISION,
+  "STATIC_shift_EMP" DOUBLE PRECISION,
+  "DYNAMIC_shift_EMP" DOUBLE PRECISION,
+  "STRUCT_shift_EMP" DOUBLE PRECISION,
+  "PROD_yoy_HW" DOUBLE PRECISION,
+  "PROD_diff_HW" DOUBLE PRECISION,
+  "HW_share_diff" DOUBLE PRECISION,
+  "WITHIN_effect_HW" DOUBLE PRECISION,
+  "STATIC_shift_HW" DOUBLE PRECISION,
+  "DYNAMIC_shift_HW" DOUBLE PRECISION,
+  "STRUCT_shift_HW" DOUBLE PRECISION,
+  UNIQUE ("LETO", "DEJAVNOST"));'
+
+# Execute the table creation command
+dbExecute(con, create_table_sql)
+
 
