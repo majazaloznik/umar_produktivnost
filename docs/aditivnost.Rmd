@@ -1,0 +1,164 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Step by step rekonstrukcija chain linked volume-ov - letnih
+```{r setup, echo = FALSE, warning = FALSE}
+suppressPackageStartupMessages(library(eurostat))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(lubridate))
+```
+
+## download podatkov iz eurostata
+
+Za testiranje izberemo podatke za dodano vrednost za Slovenijo za sektorja `M` in `N`, in objavljen agregat `M_N`. Drugače je tukaj link na tabelo `nama_10_a64`: [klik](https://ec.europa.eu/eurostat/databrowser/view/nama_10_a64/default/table?lang=en)
+
++ `CP_MEUR` = constant prices (mio eur)
++ `PYP_MEUR` = previous year's prices (mio eur)
++ `CLV10_MEUR` = chain linked volumes 2010 (mio eur)
+
+```{r download, warning = FALSE, message=FALSE}
+# download podatkov                                    
+raw <- get_eurostat("nama_10_a64",
+                   filters = list(
+                     geo = "SI", # tuki zamenjaj državo ali pa EU27_2020, EU15, EA
+                     time = 1995:2023,
+                     na_item = "B1G", # Value added, gross
+                     unit = c("CP_MEUR", "PYP_MEUR", "CLV10_MEUR"),
+                     nace_r2 = c("M", "N", "M_N")))
+
+```
+
+Znebimo se odvečne robe, preimenujemo spremenljivke in gremo v malo bolj wide tabelo:
+
+```{r cleanup, warning = FALSE, message=FALSE}
+VA <-  raw |> 
+  mutate(year = year(time), .keep = "unused") |> 
+  select(-freq, -na_item, -geo) |>
+  filter(!is.na(values)) |> 
+  pivot_wider(names_from = unit, values_from = values) |>
+  rename(current_prices = CP_MEUR,
+         previous_years_prices = PYP_MEUR,
+         clv_eurostat = CLV10_MEUR) 
+head(VA)
+```
+
+
+## preverjanje teoretskih predpostavk
+
+OK, če prav razumem je osnovna ideja to, da chain linked volumes niso aditivni, medtem ko stalne cene in cene prejšnjega leta so.
+
+Tako da najprej preverimo do katere mere je to res pri teh podatkih: ali se M in N pravilno seštejejo:
+
+```{r test, warning = FALSE, message=FALSE}
+test_additivity <-  VA |> 
+  mutate(group =ifelse(nace_r2 == "M_N", "orig", "aggr")) |>
+  group_by(group, year) |> 
+  summarise(across(where(is.numeric), \(x) sum(x, na.rm = TRUE))) |> 
+  pivot_wider(names_from = group,
+              values_from = -c(year, group),
+              names_glue = "{.value}_{group}") |> 
+  mutate(across(ends_with("_aggr"), 
+                \(x) x - get(sub("_aggr$", "_orig", cur_column())),
+                .names = "{sub('_aggr$', '_diff', .col)}"),
+         .keep = "unused")
+
+head(test_additivity)
+```
+
+OK, to izgleda prilično OK. 
+
+## zdej pa zares
+
+Tale pipe naredi naslednje stvari:
+
+**agregacija**
+
++ najprej seštejemo M+N - dodamo novo spremenljivko `group`, ki ima vrednost `orig` za vrednosti iz Eurostatove `M_N` vsote in `aggr` za naše agregacije
+
+**koeficient rasti**
+
++ potem ta enostaven del: izračunamo koeficient rasti oz. `growth_factor`, ki je razmerje med letošnjo DV v lanskih cenah in lansko DV v tekočih cenah. 
++ edge case - to nisem čist ziher kaj narest z NA za prvo leto, zato ga spremenim v 1?
+
+**veriženje**
+
++ naredim dve vmesni spremenljivki: `chain_forward` in `chain_backward`, ki v eno ali drugo smer množita oz. delita zaporedne koeficiente rasti (zaradi teh cumprod-ov nočeš imeti NA-jev nikjer v seriji)
++ potem jih združim, tako da za ref leto 2010 dam indeks 1, za nazaj je backward veriga in za naprej je forward veriga. 
++ na koncu množim verižen indeks s tekočimi cenami, da dobimo izračunan naš chain linked volume - `umar_chained_value`
+
+V tabeli `calc` so zdej vsi ti izračuni:
+
+```{r calc,  warning = FALSE, message=FALSE}
+ref_year <- 2010
+calc <- VA |> 
+  mutate(group = ifelse(nace_r2 == "M_N", "orig", "aggr")) |>
+  group_by(group, year) |> 
+  summarise(across(where(is.numeric), \(x) sum(x, na.rm = TRUE))) |> 
+  mutate(growth_factor = previous_years_prices / lag(current_prices),
+         growth_factor = ifelse(is.na(growth_factor), 1, growth_factor),
+         chain_forward = cumprod(growth_factor),
+         chain_backward = rev(cumprod(rev(1/growth_factor))),
+         chained_index = case_when(
+           year > ref_year ~ chain_forward / chain_forward[year == ref_year],
+           year == ref_year ~ 1,
+           year < ref_year ~ chain_backward[row_number() + 1] / 
+             chain_backward[year == ref_year + 1]),
+         clv_umar = current_prices[year == ref_year] * chained_index) 
+```
+
+OK, zdej pa spucamo to tabelo in gremo primerjat naše izračune z Eurostatovimi:
+
+```{r final, warning = FALSE, message=FALSE}
+final <- calc |> 
+  select(group, year, clv_eurostat, clv_umar) |> 
+  pivot_wider(names_from = group,
+              values_from = c(clv_eurostat, clv_umar))
+head(final)
+```
+
+## rezultati!
+
+In to zgleda kot da je približno prav.. Se pravi :
+
++ referenčna pravilna vrednost je `clv_eurostat_orig`, to je Eurostat naračunal za M_N
++ en test, da imam pravilen izračun chain linked values, je `clv_umar_orig`, torej naš  izračun iz objavljenih M_N agregatov za tekoče in lanske cene (rdeča črta)
++ glavni rezultat pa je `clv_umar_aggr`, ki je naš izračun iz agregatov M+N, ki jih mi seštejemo iz tekočih in lanskih cen (zelena črta)
+
+Razliki za ti dve seriji sta na prvem grafu levo.
+
+Za boljšo predstavo pa še drugi graf, kjer je zraven (črno) še razlika med referenčno vrednostjo in nepravilnim izračunom, kjer seštevamo sicer neaditivne vrednosti CLV za M + N 
+
+```{r test2, warning = FALSE, message=FALSE, echo = FALSE,fig.height=4, fig.width=6, fig.show='hold', fig.ncol=2, out.width='50%'}
+test <- final |> 
+  mutate(diff1 = clv_eurostat_orig - clv_umar_orig,
+         diff2 = clv_eurostat_orig - clv_umar_aggr,
+         diff3 = clv_eurostat_orig - clv_eurostat_aggr)
+
+nice_par = function(mar = c(3.3, 3, 2, 1), mgp = c(2, 0.4, 0), tck = -0.01,
+                    cex.axis = 0.9, las = 1, mfrow = c(1, 1), ...) {
+  par(mar = mar, mgp = mgp, tck = tck, cex.axis = cex.axis, las = las,
+      mfrow = mfrow, ...)
+}
+old_par <- nice_par()
+
+plot(test$year, test$diff1, type = "l", col = "red", 
+     ylab = "Razlika v mio EUR", xlab = "", ylim = range(test$diff1, test$diff2))
+lines(test$year, test$diff2, col = "green")
+abline(h = 0)
+
+
+plot(test$year, test$diff3, type = "l",ylab = "Razlika v mio EUR",
+     xlab = "")
+lines(test$year, test$diff1, col = "red")
+lines(test$year, test$diff2, col = "green")
+abline(h = 0)
+
+
+```
+Zdej ne vem, meni to zgleda good enough. V vsakem primeru mnogo bolje od tega, kar smo delali zdaj. Dodam pa caveat, da sem na hitro gledala kako to deluje pri ta velikih agregacijah, npr. seštevanje EU15 držav, in da je tam mnogo bolj messy, ker se tam niti tekoče cene niti približno prav ne seštejejo, tako da že osnovne predpostavke za ta izračun ne držijo.. Bom naredila še write-up tega in dodala v dokumentacijo, ampak mislim, da je bistvo te vaje, da je ta izračun pravilen in v vsakem primeru bolj pravilen od seštevanja neaditivnih vrednosti, tudi če pri nekaterih agregacijah ne bo bistveno bolj pravilen?
+
+Pol moram pa še četrtletja zvadit...

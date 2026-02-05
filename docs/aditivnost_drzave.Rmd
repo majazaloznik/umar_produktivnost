@@ -1,0 +1,162 @@
+---
+output:
+  pdf_document: default
+---
+
+# Step by step rekonstrukcija chain linked volume-ov - letnih
+```{r setup, echo = FALSE, warning = FALSE}
+suppressPackageStartupMessages(library(eurostat))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(lubridate))
+```
+
+## download podatkov iz eurostata
+
+Zato, da sigurno nimamo težav s tečaji, izberemo podatke za dodano vrednost za EA19 in za vseh 19 držav posamično za leta 2015-2022. Drugače je tukaj link na tabelo `nama_10_a64`: [klik](https://ec.europa.eu/eurostat/databrowser/view/nama_10_a64/default/table?lang=en)
+
++ `CP_MEUR` = constant prices (mio eur)
++ `PYP_MEUR` = previous year's prices (mio eur)
++ `CLV15_MEUR` = chain linked volumes 2015 (mio eur)
+
+```{r download, warning = FALSE, message=FALSE}
+# download podatkov
+raw <- get_eurostat("nama_10_a10",
+                   filters = list(
+                     geo =  c("EA19", "BE", "DE", "EE",  "EL",
+                       "ES", "FR", "IT", "CY", "LV",
+                       "LT", "LU", "MT", "NL", "AT",
+                       "PT", "SI", "SK", "FI", "IE"),
+                     time = 2015:2022,
+                     na_item = "B1G", # Value added, gross
+                     unit = c("CP_MEUR", "PYP_MEUR", "CLV15_MEUR"),
+                     nace_r2 = c("TOTAL")))
+
+```
+
+Znebimo se odvečne robe, preimenujemo spremenljivke in gremo v malo bolj wide tabelo:
+
+```{r cleanup, warning = FALSE, message=FALSE}
+VA <-  raw |>
+  mutate(year = year(time), .keep = "unused") |>
+  select(-freq, -na_item, -nace_r2) |>
+  filter(!is.na(values)) |>
+  pivot_wider(names_from = unit, values_from = values) |>
+  rename(current_prices = CP_MEUR,
+         previous_years_prices = PYP_MEUR,
+         clv_eurostat = CLV15_MEUR)
+head(VA)
+```
+
+
+## preverjanje teoretskih predpostavk
+
+Ali se tekoče cene in cene prejšnjega leta pravilno seštejejo?
+
+```{r test, warning = FALSE, message=FALSE}
+test_additivity <-  VA |>
+  mutate(group =ifelse(geo == "EA19", "orig", "aggr")) |>
+  group_by(group, year) |>
+  summarise(across(where(is.numeric), \(x) sum(x))) |>
+  pivot_wider(names_from = group,
+              values_from = -c(year, group),
+              names_glue = "{.value}_{group}") |>
+  mutate(across(ends_with("_aggr"),
+                \(x) x - get(sub("_aggr$", "_orig", cur_column())),
+                .names = "{sub('_aggr$', '_diff', .col)}"),
+         .keep = "unused")
+
+test_additivity
+```
+
+Zelo slabo...  
+
+## zdej pa zares
+
+Tale pipe naredi naslednje stvari:
+
+**agregacija**
+
++ najprej seštejemo cene za vse države - dodamo novo spremenljivko `group`, ki ima vrednost `orig` za vrednosti iz Eurostatove `EA19` vsote in `aggr` za naše agregacije
+
+**koeficient rasti**
+
++ potem ta enostaven del: izračunamo koeficient rasti oz. `growth_factor`, ki je razmerje med letošnjo DV v lanskih cenah in lansko DV v tekočih cenah.
++ edge case - to nisem čist ziher kaj narest z NA za prvo leto, zato ga spremenim v 1?
+
+**veriženje**
+
++ naredim dve vmesni spremenljivki: `chain_forward` in `chain_backward`, ki v eno ali drugo smer množita oz. delita zaporedne koeficiente rasti (zaradi teh cumprod-ov nočeš imeti NA-jev nikjer v seriji)
++ potem jih združim, tako da za ref leto 2010 dam indeks 1, za nazaj je backward veriga in za naprej je forward veriga.
++ na koncu množim verižen indeks s tekočimi cenami, da dobimo izračunan naš chain linked volume - `umar_chained_value`
+
+V tabeli `calc` so zdej vsi ti izračuni:
+
+```{r calc,  warning = FALSE, message=FALSE}
+ref_year <- 2015
+calc <- VA |>
+  mutate(group = ifelse(geo == "EA19", "orig", "aggr")) |>
+  group_by(group, year) |>
+  summarise(across(where(is.numeric), \(x) sum(x, na.rm = TRUE))) |>
+  mutate(growth_factor = previous_years_prices / lag(current_prices),
+         growth_factor = ifelse(is.na(growth_factor), 1, growth_factor),
+         chain_forward = cumprod(growth_factor),
+         chain_backward = rev(cumprod(rev(1/growth_factor))),
+         chained_index = case_when(
+           year > ref_year ~ chain_forward / chain_forward[year == ref_year],
+           year == ref_year ~ 1,
+           year < ref_year ~ chain_backward[row_number() + 1] /
+             chain_backward[year == ref_year + 1]),
+         clv_umar = current_prices[year == ref_year] * chained_index)
+```
+
+OK, zdej pa spucamo to tabelo in gremo primerjat naše izračune z Eurostatovimi:
+
+```{r final, warning = FALSE, message=FALSE}
+final <- calc |>
+  select(group, year, clv_eurostat, clv_umar) |>
+  pivot_wider(names_from = group,
+              values_from = c(clv_eurostat, clv_umar))
+head(final)
+```
+
+## rezultati!
+
++ referenčna pravilna vrednost je `clv_eurostat_orig`, to je Eurostat naračunal za EA19
++ en test, da imam pravilen izračun chain linked values, je `clv_umar_orig`, torej naš  izračun iz objavljenih EU19 agregatov za tekoče in lanske cene (rdeča črta) - pričakovano
++ glavni rezultat pa je `clv_umar_aggr`, ki je naš izračun iz agregatov za EU, ki jih mi seštejemo iz tekočih in lanskih cen za vsako državo in iz tega naredimo CLV (zelena črta) - ker zgleda, da se tekoče in lanske cene narobe seštejejo, potem tudi ta CLV ne more biti enak Eurostatovemu
+
+Razliki za ti dve seriji sta na prvem grafu levo.
+
+Za boljšo predstavo pa še drugi graf, kjer je zraven (črno) še razlika med referenčno vrednostjo in nepravilnim izračunom, kjer seštevamo sicer neaditivne vrednosti CLV za vseh 19 držav
+
+```{r test2, warning = FALSE, message=FALSE, echo = FALSE,fig.height=4, fig.width=6, fig.show='hold', fig.ncol=2, out.width='50%'}
+test <- final |>
+  mutate(diff1 = clv_eurostat_orig - clv_umar_orig,
+         diff2 = clv_eurostat_orig - clv_umar_aggr,
+         diff3 = clv_eurostat_orig - clv_eurostat_aggr)
+
+nice_par = function(mar = c(3.3, 3, 2, 1), mgp = c(2, 0.4, 0), tck = -0.01,
+                    cex.axis = 0.9, las = 1, mfrow = c(1, 1), ...) {
+  par(mar = mar, mgp = mgp, tck = tck, cex.axis = cex.axis, las = las,
+      mfrow = mfrow, ...)
+}
+old_par <- nice_par()
+
+plot(test$year, test$diff1, type = "l", col = "red",
+     ylab = "Razlika v mio EUR", xlab = "", ylim = range(test$diff1, test$diff2, na.rm = TRUE))
+abline(h = 0)
+lines(test$year, test$diff1, col = "red")
+lines(test$year, test$diff2, col = "green")
+
+
+plot(test$year, test$diff3, type = "l",ylab = "Razlika v mio EUR",
+     xlab = "", ylim = range(test$diff1, test$diff2, test$diff3, na.rm = TRUE))
+abline(h = 0)
+lines(test$year, test$diff1, col = "red")
+lines(test$year, test$diff2, col = "green")
+
+
+
+```
+

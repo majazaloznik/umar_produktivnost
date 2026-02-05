@@ -158,10 +158,10 @@ PROD_A_agr <-  DV_A_agr |>
 SURS_shift_share_letni <- PROD_A_agr |>
   select(-SAL_PER,-SAL_HW, -COMP_nom) |>
   dplyr::group_by(LETO) |>
-  dplyr::mutate(EMP_share = EMP_PER / EMP_PER[DEJAVNOST == "Skupaj dejavnosti"] * 100) |>
-  dplyr::mutate(HW_share = EMP_HW / EMP_HW[DEJAVNOST == "Skupaj dejavnosti"] * 100) |>
-  dplyr::mutate(VA_share_nom = VA_nom / VA_nom[DEJAVNOST == "Skupaj dejavnosti"] * 100) |>
-  dplyr::mutate(VA_share_real = VA_real / VA_real[DEJAVNOST == "Skupaj dejavnosti"] * 100) |>
+  dplyr::mutate(EMP_share = EMP_PER / EMP_PER[SKD == "Skupaj teoretsko prav"] * 100) |>
+  dplyr::mutate(HW_share = EMP_HW / EMP_HW[SKD == "Skupaj teoretsko prav"] * 100) |>
+  dplyr::mutate(VA_share_nom = VA_nom / VA_nom[SKD == "Skupaj teoretsko prav"] * 100) |>
+  dplyr::mutate(VA_share_real = VA_real / VA_real[SKD == "Skupaj teoretsko prav"] * 100) |>
   rowwise () |>
   dplyr::mutate(PROD_real_EMP = VA_real / EMP_PER,
                 PROD_real_HW = VA_real / EMP_HW,

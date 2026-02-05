@@ -9,9 +9,8 @@ home <- "\\\\192.168.38.7\\public$\\Avtomatizacija\\umar_produktivnost\\"
 setwd(home)
 library(gmailr)
 library(kableExtra)
-options(gargle_oauth_email = TRUE)
 gm_auth_configure(path ="data/credentials.json")
-gm_auth(email = TRUE, cache = ".secret")
+gm_auth(email = "umar.data.bot@gmail.com", cache = ".secret")
 
 email_list <- c("maja.zaloznik@gmail.com",
                 "maja.zaloznik@gov.si",
@@ -37,7 +36,6 @@ initial_counts <- get_produktivnost_table_row_counts(con)
 ###############################################################################
 ## poženi skripte za eurostat tabele
 ###############################################################################
-getwd()
 source("R\\05_SURS_RULC_strukt_cetrtletno.R", encoding = 'UTF-8')
 source("R\\06_SURS_RULC_strukt_letno.R", encoding = 'UTF-8')
 

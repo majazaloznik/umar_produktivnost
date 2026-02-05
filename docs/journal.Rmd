@@ -530,7 +530,17 @@ Dobro, to je zdej na produkciji, uradno otvorjeno. Upam, da dela vse ok, bomo vi
 
 
 
+# 13.9.2024
+
+dodala-začasno tabelo za letni surs shift share, kjer je namesto sursovega skupaj, vzeta Katarinina verzija skupaj, ki izvzame sektorje 12 tobačna, pripisana stanovanjska dejavnost gospodinjstev v L. in O . dejavnosti uprave in obrambe..in U dejavnosti extrateritiorialnih..
+
+dodana nova tabela shift_share_teoretsko_prav. in začasno nova skripta samo za to verzijo tabele, po posvetovanju z Rotijo, Urško Č in Janezom bomo naredili permanentno in posodobili dokumentaicjo. 
 
 
+# 5.2.2026
+
+Rotija prišla prosit, da poženem eurostat, ker je Peter preračunaval s podatki tam in so drugačni kot naši. ker smo mi nazadnje 17.12. posodabljali in na eurostatu vmes posodabljajo stvari za posamezne države, tko da tko pač je. sem pognala še enkrat, ampak ni delalo, ker so vmes že za ene par džav za 2025 objavili podatke, ampak ni pa seveda še EU27 izračunanega, ki ga rabimio, sem mogla mal popravit pipe v 01.
+
+potem sem pa še iz https://ec.europa.eu/eurostat/news/release-calenda pobrala vse data release objave z GDP jem in jih dodala v task scheduler. 
 
 

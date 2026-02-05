@@ -106,15 +106,15 @@ data_macro <- master_agr %>%
          W_AGE_PROP_pjan = NR_20_64 /NR_TOTAL) |>  # delež 20-64 v prebivalstvu
   ungroup() |>
   group_by(time) |>
-  mutate(GDP_PC_PPS_EU27_100 = GDP_PC_PPS / GDP_PC_PPS[geo=="EU27_2020"] * 100,
-         GDP_PC_PPS_pjan_EU27_100 = GDP_PC_PPS_pjan / GDP_PC_PPS_pjan[geo=="EU27_2020"] * 100,
-         PROD_PPS_EU27_100  = PROD_PPS / PROD_PPS[geo=="EU27_2020"] * 100,
-         PROD_PPS_HW_EU27_100 = PROD_PPS_HW / PROD_PPS_HW[geo=="EU27_2020"] * 100,
-         EMP_RATE_EU27_100 = EMP_RATE / EMP_RATE[geo=="EU27_2020"] * 100,
-         HW_EMP_EU27_100 = HW_EMP / HW_EMP[geo=="EU27_2020"] * 100,
-         EMP_W_AGE_PROP_EU27_100 = EMP_W_AGE_PROP / EMP_W_AGE_PROP[geo=="EU27_2020"] * 100,
-         W_AGE_PROP_EU27_100 = W_AGE_PROP / W_AGE_PROP[geo=="EU27_2020"] * 100,
-         W_AGE_PROP_pjan_EU27_100 = W_AGE_PROP_pjan / W_AGE_PROP_pjan[geo=="EU27_2020"] * 100) |>
+  mutate(GDP_PC_PPS_EU27_100 = GDP_PC_PPS / GDP_PC_PPS[geo=="EU27_2020"][1] * 100,
+         GDP_PC_PPS_pjan_EU27_100 = GDP_PC_PPS_pjan / GDP_PC_PPS_pjan[geo=="EU27_2020"][1] * 100,
+         PROD_PPS_EU27_100  = PROD_PPS / PROD_PPS[geo=="EU27_2020"][1] * 100,
+         PROD_PPS_HW_EU27_100 = PROD_PPS_HW / PROD_PPS_HW[geo=="EU27_2020"][1] * 100,
+         EMP_RATE_EU27_100 = EMP_RATE / EMP_RATE[geo=="EU27_2020"][1] * 100,
+         HW_EMP_EU27_100 = HW_EMP / HW_EMP[geo=="EU27_2020"][1] * 100,
+         EMP_W_AGE_PROP_EU27_100 = EMP_W_AGE_PROP / EMP_W_AGE_PROP[geo=="EU27_2020"][1] * 100,
+         W_AGE_PROP_EU27_100 = W_AGE_PROP / W_AGE_PROP[geo=="EU27_2020"][1] * 100,
+         W_AGE_PROP_pjan_EU27_100 = W_AGE_PROP_pjan / W_AGE_PROP_pjan[geo=="EU27_2020"][1] * 100) |>
   ungroup() |>
   mutate(time = lubridate::year(time),
          agr = ifelse(geo %in% geo_lookup$geo, FALSE, TRUE)) |>
