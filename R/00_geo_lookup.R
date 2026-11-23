@@ -66,6 +66,14 @@ country_code_inovatorke <- c("DK", "SE", "NL")
 
 country_code_V4 <- c("CZ", "HU", "SK", "PL")
 
+# added baltic states 23.11.2026
+
+country_code_BLT <- c("EE", "LV", "LT")
+
+# create lookup table
+geo_lookup <- data.frame(geo = geo_countries)
+
+# this is used in runners that source this, so don't remove it, you ninny!
 geo_aggregations <- list(
   EU13 = country_code_EU13,
   EU14 = country_code_EU14,
@@ -73,7 +81,8 @@ geo_aggregations <- list(
   EA20 = country_code_EA20,
   EAnoIE = country_code_EA_noIE,
   inovatorke = country_code_inovatorke,
-  V4 = country_code_V4
+  V4 = country_code_V4,
+  BLT = country_code_BLT
 )
 # create lookup table
 geo_lookup <- data.frame(geo = geo_countries)
@@ -91,26 +100,27 @@ geo_lookup$EU27_noIE <- geo_lookup$geo %in% country_code_EU27_noIE
 geo_lookup$EA_noIE <- geo_lookup$geo %in% country_code_EA_noIE
 geo_lookup$inovatorke <- geo_lookup$geo %in% country_code_inovatorke
 geo_lookup$V4 <- geo_lookup$geo %in% country_code_V4
+geo_lookup$BLT <- geo_lookup$geo %in% country_code_BLT
 
 
 
-
-
-
-
+#
+#
+#
 # #### zapis na postgres bazo ####################################################
 # # Database connection details
 # con <- DBI::dbConnect(RPostgres::Postgres(),
 #                       dbname = "produktivnost",
-#                       host = "192.168.38.21",
+#                       host = "localhost",
 #                       port = 5432,
 #                       user = "postgres",
 #                       password = Sys.getenv("PG_PG_PSW"))
 # DBI::dbExecute(con, "set search_path to produktivnost")
 # geo_lookup$EU27_2020 <- NULL
-# dbExecute(con, "TRUNCATE TABLE \"geo_lookup\"")
+# DBI::dbExecute(con, "TRUNCATE TABLE \"geo_lookup\"")
+# DBI::dbExecute(con, "ALTER TABLE \"geo_lookup\" ADD COLUMN IF NOT EXISTS \"BLT\" BOOL;")
 # # Insert data into the PostgreSQL table
-# dbWriteTable(con, "geo_lookup", geo_lookup, append = TRUE, row.names = FALSE)
+# DBI::dbWriteTable(con, "geo_lookup", geo_lookup, append = TRUE, row.names = FALSE)
 #
 # # Disconnect from the database
 # dbDisconnect(con)
