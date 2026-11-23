@@ -61,7 +61,8 @@ country_code_EA19 <- c("BE", "DE", "EE",  "EL",
                        "LT", "LU", "MT", "NL", "AT",
                        "PT", "SI", "SK", "FI", "IE")
 
-country_code_inovatorke <- c("DK", "SE", "FI", "NL")
+# removed finland 9.11.2026
+country_code_inovatorke <- c("DK", "SE", "NL")
 
 country_code_V4 <- c("CZ", "HU", "SK", "PL")
 

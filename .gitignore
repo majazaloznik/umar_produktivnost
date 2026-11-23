@@ -47,3 +47,4 @@ rsconnect/
 
 .secret/
 data/credentials.json
+.positai
